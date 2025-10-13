@@ -1,0 +1,5 @@
+{
+  "name": "Markie - AI Markdown to HTML Converter",
+  "description": "A powerful tool to convert Markdown articles into clean, semantic, and SEO-optimized HTML5. Automatically generates meta tags, Open Graph data, Twitter Cards, and JSON-LD structured data for superior search visibility.",
+  "requestFramePermissions": []
+}
