@@ -100,6 +100,7 @@ Follow these inviolable rules for the conversion:
 
 **6. Table Accessibility:**
    - Tables MUST have a proper structure: \`<table>\`, \`<thead>\`, \`<tbody>\`, \`<tr>\`, \`<th>\`, and \`<td>\`.
+   - Every \`<table>\` element MUST have the class \`table-blog\`.
    - All table header cells (\`<th>\`) MUST have a \`scope="col"\` attribute.
 
 **7. Code Block Syntax Highlighting:**

@@ -39,9 +39,10 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         pre code { padding: 0; background: none; }
         blockquote { padding-left: 1em; }
         img { max-width: 100%; height: auto; border-radius: 8px; }
-        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-        th, td { padding: 12px 15px; text-align: left; }
-        th { font-weight: 600; }
+        .table-blog { border-collapse: separate; border-spacing: 0; width: 100%; margin: 1.5em 0; overflow: hidden; border-radius: 8px; }
+        .table-blog th, .table-blog td { padding: 12px 15px; text-align: left; }
+        .table-blog th { font-weight: 700; font-size: 0.9em; letter-spacing: 0.05em; text-transform: uppercase; }
+        .table-blog tbody tr { border-top: 1px solid; }
         a { font-weight: 500; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .section-part { margin-bottom: 2.5em; }
@@ -54,8 +55,11 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         code { background-color: #e2e8f0; }
         pre { background-color: #e2e8f0; color: #1e293b; }
         blockquote { border-left: 4px solid #cbd5e1; color: #475569; }
-        th, td { border: 1px solid #e2e8f0; }
-        th { background-color: #f1f5f9; }
+        .table-blog { box-shadow: 0 0 0 1px #e2e8f0; }
+        .table-blog th { background-color: #f8fafc; color: #475569; }
+        .table-blog td { color: #334155; }
+        .table-blog tbody tr { border-color: #e2e8f0; }
+        .table-blog tbody tr:nth-child(even) { background-color: #f8fafc; }
         a { color: #0891b2; }
     `;
 
@@ -65,8 +69,11 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         code { background-color: #3f3f46; }
         pre { background-color: #18181b; color: #e4e4e7; }
         blockquote { border-left: 4px solid #52525b; color: #a1a1aa; }
-        th, td { border: 1px solid #3f3f46; }
-        th { background-color: #27272a; }
+        .table-blog { box-shadow: 0 0 0 1px #3f3f46; }
+        .table-blog th { background-color: #27272a; color: #a1a1aa; }
+        .table-blog td { color: #d4d4d8; }
+        .table-blog tbody tr { border-color: #3f3f46; }
+        .table-blog tbody tr:nth-child(even) { background-color: #18181b; }
         a { color: #67e8f9; }
     `;
     
