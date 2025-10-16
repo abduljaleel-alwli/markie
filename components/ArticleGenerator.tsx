@@ -1,8 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, Language } from '../hooks/useTranslations';
 import { generateText, generateArticleStream, generateImage, generateArticleOutline, ArticleOutline } from '../services/geminiService';
 import { ClipboardIcon, CheckIcon, DownloadIcon, MagicSparklesIcon, SpinnerIcon, SearchIcon, PhotoIcon, ListBulletIcon } from './icons';
+import {
+    LANGUAGE_OPTIONS,
+    TONE_OPTIONS,
+    CONTENT_TYPE_OPTIONS,
+    AUDIENCE_OPTIONS,
+    WRITING_STYLE_OPTIONS,
+} from '../constants';
+import type { SelectOption } from '../types';
+import { locales } from '../i18n/locales';
+
 
 interface ArticleGeneratorProps {
     apiKey: string | null;
@@ -28,7 +38,7 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
     const [category, setCategory] = useState('');
     const [title, setTitle] = useState('');
     const [keywords, setKeywords] = useState('');
-    const [articleLanguage, setArticleLanguage] = useState('العربية');
+    const [articleLanguage, setArticleLanguage] = useState('arabic');
     const [tone, setTone] = useState('');
     const [contentType, setContentType] = useState('');
     const [targetAudience, setTargetAudience] = useState('');
@@ -62,8 +72,8 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
 
 
     const buildOutlinePrompt = useCallback(() => {
-        let prompt = `Based on the following parameters, create a structured JSON outline for a blog article. 
-        Your task is to generate an outline of subheadings (H2s) and their content summaries that logically follow the main title.
+        const capitalizedLanguage = articleLanguage.charAt(0).toUpperCase() + articleLanguage.slice(1);
+        let prompt = `You are an expert SEO content strategist. Your task is to create a structured JSON outline for a high-ranking blog article. The outline should be logical, comprehensive, and optimized for search engines and user engagement.
 
         **Article Title (This is fixed and MUST NOT be changed):** "${title}"
         
@@ -72,38 +82,45 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
         - Tone: ${tone || 'professional'}
         - Target Audience: ${targetAudience || 'general public'}
         - Desired Word Count: Approximately ${wordCount || 600} words
-        - Language: ${articleLanguage}
-        - Keywords to include: ${keywords || 'N/A'}
+        - Language: ${capitalizedLanguage}
+        - Primary Keywords to target: ${keywords || 'N/A'}
 
         **Structural & Stylistic Requirements:**
-        - The article should have between ${numberOfSections.split('-')[0]} and ${numberOfSections.split('-')[1]} main section headings (H2s).
-        - The introduction style should be: "${introductionStyle}".
-        - The conclusion style should be: "${conclusionStyle}".
+        - Create between ${numberOfSections.split('-')[0]} and ${numberOfSections.split('-')[1]} main section headings (H2s). These headings should be compelling, user-focused, and incorporate keywords where natural.
+        - The introduction style should be: "${introductionStyle}". The summary should reflect this.
+        - The conclusion style should be: "${conclusionStyle}". The summary should reflect this.
+        - The flow of sections must be logical, guiding the reader from introduction to conclusion smoothly.
 
         **Optional Content (include in JSON only if enabled and relevant):**
-        - Include FAQ Section: ${includeFaq ? 'Yes, generate a relevant FAQ section with a title and 3-4 questions and answers.' : 'No'}
-        - Include Data Table: ${includeTable ? 'Yes, if the topic is suitable, create a relevant data table with a title, headers, and several rows of data.' : 'No'}
+        - Include FAQ Section: ${includeFaq ? `Yes, generate a relevant FAQ section with a title (like "Frequently Asked Questions") and 3-4 questions that users commonly search for related to the topic.` : 'No'}
+        - Include Data Table: ${includeTable ? `Yes, if the topic is suitable, create a relevant data table with a descriptive title, clear headers, and placeholder summaries for several rows of data.` : 'No'}
         - Include a Quote: ${includeQuote ? 'Yes, find one relevant and impactful quote from a notable source to include.' : 'No'}
 
-        Generate the JSON object based on the schema provided. Do not create a new title; build the structure under the one provided.
+        Generate ONLY the JSON object based on the provided schema. Do not create a new title; build the entire structure based on the one provided. Ensure all section titles and summaries are optimized for the target keywords and audience.
         `;
         return prompt;
     }, [title, category, tone, targetAudience, wordCount, articleLanguage, keywords, numberOfSections, introductionStyle, conclusionStyle, includeFaq, includeTable, includeQuote]);
     
     const buildFullArticlePromptFromOutline = useCallback((outlineToUse: ArticleOutline) => {
-        let prompt = `You are an expert writer specializing in creating engaging, well-structured, and high-quality articles in Markdown format. Your task is to expand the following JSON outline into a complete and detailed article of approximately ${wordCount || 600} words.
+        const capitalizedLanguage = articleLanguage.charAt(0).toUpperCase() + articleLanguage.slice(1);
+        let prompt = `You are an expert SEO content strategist and writer. Your mission is to write a comprehensive, engaging, and highly-optimized article in Markdown format, based on the provided JSON outline. The final article must be ready for publication and adhere to the highest standards of modern SEO and readability.
 
         **Instructions:**
-        1.  **Follow the Outline:** Adhere strictly to the provided JSON outline. Expand the summaries for the introduction, sections, and conclusion into detailed content.
-        2.  **Tone and Style:** Write in a ${tone || 'professional'} tone, for a ${targetAudience || 'general public'} audience. The writing style should be ${writingStyle || 'clear and engaging'}.
-        3.  **Language:** The entire article MUST be written in ${articleLanguage}.
-        4.  **Keywords:** Naturally integrate these keywords where appropriate: ${keywords || 'N/A'}.
+        1.  **Follow the Outline:** Adhere strictly to the provided JSON outline. Expand the summaries for the introduction, sections, and conclusion into detailed, high-quality content. The final word count should be approximately ${wordCount || 600} words.
+        2.  **Tone and Style:** Adopt a ${tone || 'professional'} tone suitable for a ${targetAudience || 'general public'} audience. The writing style must be ${writingStyle || 'clear and engaging'}. Use short paragraphs, active voice, and clear language to maximize readability.
+        3.  **Language:** The entire article MUST be written in ${capitalizedLanguage}.
+        4.  **SEO Keyword Integration:** Seamlessly and naturally integrate the primary keywords (${keywords || 'N/A'}) throughout the article. Include them in headings, the introduction, the conclusion, and the body text without "keyword stuffing". The distribution should feel organic.
         5.  **Output Format (MANDATORY):** The entire output MUST be a single, valid Markdown document.
             - The article MUST begin with the main title, which is "${title}", as a Level 1 Heading (H1).
             - Each 'section_title' from the outline MUST be a Level 2 Heading (H2), like \`## Section Title\`.
-            - If a 'data_table' is present, format it as a proper Markdown table.
+            - If a 'data_table' is present, format it as a proper, accessible Markdown table with clear headers.
             - If a 'faq_section' is present, use its 'faq_title' as an H2, and each 'question' as a Level 3 Heading (H3), like \`### Question?\`.
             - If a 'quote' is present, format it as a Markdown blockquote, like \`> Quote text...\`.
+            - Use other Markdown elements semantically:
+                - \`**bold**\` for strong importance.
+                - \`*italic*\` for emphasis.
+                - Unordered lists (\`-\` or \`*\`) for non-sequential items.
+                - Ordered lists (\`1.\`) for steps or sequential items.
         6.  **Final Output:** Do NOT include the JSON outline itself or any meta-commentary. The output should be only the final, complete Markdown article.
 
         **JSON OUTLINE TO EXPAND:**
@@ -252,6 +269,26 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
         document.body.removeChild(link);
     };
     
+    const useSelectOptions = (options: SelectOption[], placeholderKey?: keyof typeof locales.en) => {
+        const t = useTranslations(language);
+        return useMemo(() => {
+            const mappedOptions = options.map(opt => ({
+                value: opt.value,
+                label: language === 'ar' ? opt.label_ar : opt.label_en
+            }));
+            if (placeholderKey) {
+                mappedOptions.unshift({ value: '', label: t(placeholderKey) });
+            }
+            return mappedOptions;
+        }, [language, options, placeholderKey, t]);
+    };
+
+    const languageOptions = useSelectOptions(LANGUAGE_OPTIONS);
+    const toneOptions = useSelectOptions(TONE_OPTIONS, 'selectTone');
+    const contentTypeOptions = useSelectOptions(CONTENT_TYPE_OPTIONS, 'selectContentType');
+    const audienceOptions = useSelectOptions(AUDIENCE_OPTIONS, 'selectAudience');
+    const writingStyleOptions = useSelectOptions(WRITING_STYLE_OPTIONS, 'selectWritingStyle');
+
     const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {value: string, label: string}[]) => (
         <div>
             <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{label}</label>
@@ -342,21 +379,11 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                     {renderSelect('language', t('selectLanguage'), articleLanguage, (e) => setArticleLanguage(e.target.value), [
-                        { value: 'العربية', label: 'العربية' }, { value: 'الإنجليزية', label: 'الإنجليزية' }, { value: 'الفرنسية', label: 'الفرنسية' }, { value: 'الإسبانية', label: 'الإسبانية' }, { value: 'الألمانية', label: 'الألمانية' },
-                    ])}
-                    {renderSelect('tone', t('selectTone'), tone, (e) => setTone(e.target.value), [
-                        { value: '', label: t('selectTone')}, { value: 'مرح', label: 'مرح' }, { value: 'احترافي', label: 'احترافي' }, { value: 'عامية مصرية', label: 'عامية مصرية' }, { value: 'خليجية', label: 'خليجية' }, { value: 'رسمي', label: 'رسمي' }, { value: 'ودي', label: 'ودي' }, { value: 'تحفيزي', label: 'تحفيزي' },
-                    ])}
-                    {renderSelect('contentType', t('selectContentType'), contentType, (e) => setContentType(e.target.value), [
-                        { value: '', label: t('selectContentType')}, { value: 'مقال', label: 'مقال' }, { value: 'تدوينة', label: 'تدوينة' }, { value: 'تقرير', label: 'تقرير' }, { value: 'مراجعة', label: 'مراجعة' }, { value: 'دليل', label: 'دليل' }, { value: 'قائمة', label: 'قائمة' },
-                    ])}
-                    {renderSelect('targetAudience', t('selectAudience'), targetAudience, (e) => setTargetAudience(e.target.value), [
-                       { value: '', label: t('selectAudience')}, { value: 'عام', label: 'عام' }, { value: 'متخصصين', label: 'متخصصين' }, { value: 'طلاب', label: 'طلاب' }, { value: 'أطفال', label: 'أطفال' }, { value: 'كبار السن', label: 'كبار السن' },
-                    ])}
-                    {renderSelect('writingStyle', t('selectWritingStyle'), writingStyle, (e) => setWritingStyle(e.target.value), [
-                        { value: '', label: t('selectWritingStyle')}, { value: 'بسيط', label: 'بسيط' }, { value: 'متوسط', label: 'متوسط' }, { value: 'متقدم', label: 'متقدم' }, { value: 'أكاديمي', label: 'أكاديمي' }, { value: 'إبداعي', label: 'إبداعي' },
-                    ])}
+                     {renderSelect('language', t('selectLanguage'), articleLanguage, (e) => setArticleLanguage(e.target.value), languageOptions)}
+                    {renderSelect('tone', t('selectTone'), tone, (e) => setTone(e.target.value), toneOptions)}
+                    {renderSelect('contentType', t('selectContentType'), contentType, (e) => setContentType(e.target.value), contentTypeOptions)}
+                    {renderSelect('targetAudience', t('selectAudience'), targetAudience, (e) => setTargetAudience(e.target.value), audienceOptions)}
+                    {renderSelect('writingStyle', t('selectWritingStyle'), writingStyle, (e) => setWritingStyle(e.target.value), writingStyleOptions)}
                     <div>
                         <label htmlFor="wordCount" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('wordCount')}</label>
                         <input id="wordCount" type="number" value={wordCount} onChange={(e) => setWordCount(e.target.value)} placeholder={t('wordCount')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
