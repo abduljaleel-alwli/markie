@@ -91,18 +91,20 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
     }, [title, category, tone, targetAudience, wordCount, articleLanguage, keywords, numberOfSections, introductionStyle, conclusionStyle, includeFaq, includeTable, includeQuote]);
     
     const buildFullArticlePromptFromOutline = useCallback((outlineToUse: ArticleOutline) => {
-        let prompt = `You are an expert writer specializing in creating engaging, well-structured, and high-quality articles. Your task is to expand the following JSON outline into a complete and detailed article of approximately ${wordCount || 600} words. The main title of the article is "${title}".
+        let prompt = `You are an expert writer specializing in creating engaging, well-structured, and high-quality articles in Markdown format. Your task is to expand the following JSON outline into a complete and detailed article of approximately ${wordCount || 600} words.
 
         **Instructions:**
-        1.  **Follow the Outline:** Adhere strictly to the provided JSON outline. Use 'section_title' for headings (e.g., H2), and expand 'section_summary' into detailed paragraphs. Write the introduction and conclusion based on their respective summaries.
+        1.  **Follow the Outline:** Adhere strictly to the provided JSON outline. Expand the summaries for the introduction, sections, and conclusion into detailed content.
         2.  **Tone and Style:** Write in a ${tone || 'professional'} tone, for a ${targetAudience || 'general public'} audience. The writing style should be ${writingStyle || 'clear and engaging'}.
         3.  **Language:** The entire article MUST be written in ${articleLanguage}.
         4.  **Keywords:** Naturally integrate these keywords where appropriate: ${keywords || 'N/A'}.
-        5.  **Special Sections:**
-            - If a 'data_table' is present in the outline, format it clearly and logically within the article body where it makes the most sense.
-            - If a 'faq_section' is present, create a dedicated section for it at the end of the article before the conclusion. Use the 'faq_title' as a heading (e.g., H2) and format the questions (e.g., H3) and answers clearly.
-            - If a 'quote' is present, integrate it naturally into the article where it adds the most impact, for example, in a blockquote.
-        6.  **Output Format:** Provide only the final article text, ready for publication. Start directly with the introduction content. Do NOT include the JSON outline, the main title, meta-commentary, or markdown formatting like \`###\`. The output should be clean, readable text.
+        5.  **Output Format (MANDATORY):** The entire output MUST be a single, valid Markdown document.
+            - The article MUST begin with the main title, which is "${title}", as a Level 1 Heading (H1).
+            - Each 'section_title' from the outline MUST be a Level 2 Heading (H2), like \`## Section Title\`.
+            - If a 'data_table' is present, format it as a proper Markdown table.
+            - If a 'faq_section' is present, use its 'faq_title' as an H2, and each 'question' as a Level 3 Heading (H3), like \`### Question?\`.
+            - If a 'quote' is present, format it as a Markdown blockquote, like \`> Quote text...\`.
+        6.  **Final Output:** Do NOT include the JSON outline itself or any meta-commentary. The output should be only the final, complete Markdown article.
 
         **JSON OUTLINE TO EXPAND:**
         ---
@@ -172,7 +174,7 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
             const stream = await generateArticleStream(prompt, apiKey, useGoogleSearch);
             
             let finalResponse: any = null;
-            let fullArticle = `<h1>${title}</h1>\n\n`; // Start with the user's title as H1
+            let fullArticle = '';
             for await (const chunk of stream) {
                 const chunkText = chunk.text;
                 fullArticle += chunkText;
@@ -211,10 +213,10 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language })
              setError(t('noArticleToDownload'));
             return;
         }
-        const blob = new Blob([generatedArticle], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob([generatedArticle], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        const filename = `${title.trim().replace(/\s+/g, '_') || 'article'}.txt`;
+        const filename = `${title.trim().replace(/\s+/g, '_') || 'article'}.md`;
         link.href = url;
         link.download = filename;
         document.body.appendChild(link);
