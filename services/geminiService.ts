@@ -1,9 +1,35 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 
 interface SeoSuggestion {
     title: string;
     description: string;
 }
+
+export interface ArticleOutline {
+    introduction_summary: string;
+    sections: {
+        section_title: string;
+        section_summary: string;
+    }[];
+    conclusion_summary: string;
+    faq_section?: {
+        faq_title: string;
+        questions: {
+            question: string;
+            answer: string;
+        }[];
+    };
+    data_table?: {
+        table_title: string;
+        headers: string[];
+        rows: string[][];
+    };
+    quote?: {
+        quote_text: string;
+        quote_author: string;
+    };
+}
+
 
 export const generateSeoMetadata = async (markdownText: string, apiKey: string): Promise<SeoSuggestion> => {
     if (!apiKey) {
@@ -129,45 +155,202 @@ ${markdownText}
     }
 };
 
+export const generateText = async (prompt: string, apiKey: string): Promise<string> => {
+    if (!apiKey) {
+        throw new Error("Google Gemini API key not provided.");
+    }
+    const ai = new GoogleGenAI({ apiKey });
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        return response.text.trim();
+    } catch (error) {
+        console.error("Error generating text:", error);
+        throw new Error("AI text generation failed. Please check your API key and console for details.");
+    }
+};
+
+export const generateArticleStream = async (
+    prompt: string,
+    apiKey: string,
+    useGoogleSearch: boolean
+): Promise<AsyncGenerator<GenerateContentResponse>> => {
+    if (!apiKey) {
+        throw new Error("Google Gemini API key not provided.");
+    }
+    const ai = new GoogleGenAI({ apiKey });
+
+    const config: any = {};
+    if (useGoogleSearch) {
+        config.tools = [{ googleSearch: {} }];
+    }
+
+    try {
+        const response = await ai.models.generateContentStream({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: config,
+        });
+        return response;
+    } catch (error) {
+        console.error("Error generating article stream:", error);
+        throw new Error("AI article generation failed. Please check your API key and console for details.");
+    }
+};
+
+export const generateArticleOutline = async (prompt: string, apiKey: string): Promise<ArticleOutline> => {
+    if (!apiKey) {
+        throw new Error("Google Gemini API key not provided.");
+    }
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const outlineSchema = {
+      type: Type.OBJECT,
+      properties: {
+        introduction_summary: {
+          type: Type.STRING,
+          description: "A brief summary (1-2 sentences) of the introduction's main point.",
+        },
+        sections: {
+          type: Type.ARRAY,
+          description: "An array of the main sections for the article body.",
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              section_title: {
+                type: Type.STRING,
+                description: "The heading for this section.",
+              },
+              section_summary: {
+                type: Type.STRING,
+                description: "A brief summary (1-2 sentences) of what this section will cover.",
+              },
+            },
+            required: ['section_title', 'section_summary'],
+          },
+        },
+        conclusion_summary: {
+          type: Type.STRING,
+          description: "A brief summary (1-2 sentences) of the article's conclusion.",
+        },
+        faq_section: {
+            type: Type.OBJECT,
+            description: "An optional FAQ section with 3-4 relevant questions and answers.",
+            properties: {
+                faq_title: { type: Type.STRING },
+                questions: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            question: { type: Type.STRING },
+                            answer: { type: Type.STRING },
+                        },
+                        required: ['question', 'answer'],
+                    },
+                },
+            },
+        },
+        data_table: {
+            type: Type.OBJECT,
+            description: "An optional data table if relevant to the topic.",
+            properties: {
+                table_title: { type: Type.STRING },
+                headers: { type: Type.ARRAY, items: { type: Type.STRING } },
+                rows: { type: Type.ARRAY, items: { type: Type.ARRAY, items: { type: Type.STRING } } },
+            },
+        },
+        quote: {
+            type: Type.OBJECT,
+            description: "An optional relevant quote.",
+            properties: {
+                quote_text: { type: Type.STRING },
+                quote_author: { type: Type.STRING },
+            },
+        },
+      },
+      required: ['introduction_summary', 'sections', 'conclusion_summary'],
+    };
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: outlineSchema,
+            },
+        });
+        const jsonText = response.text.trim();
+        const result = JSON.parse(jsonText);
+        // Basic validation to ensure the result matches the expected structure
+        if (result && result.sections && Array.isArray(result.sections)) {
+            return result as ArticleOutline;
+        } else {
+            throw new Error("Invalid JSON outline structure from AI.");
+        }
+    } catch (error) {
+        console.error("Error generating article outline:", error);
+        throw new Error("Failed to generate article outline with AI. Please check your API key and console for details.");
+    }
+};
+
+export const generateImage = async (prompt: string, apiKey: string): Promise<string> => {
+    if (!apiKey) {
+        throw new Error("Google Gemini API key not provided.");
+    }
+    const ai = new GoogleGenAI({ apiKey });
+
+    try {
+        const response = await ai.models.generateImages({
+            model: 'imagen-4.0-generate-001',
+            prompt: `A high-quality, photorealistic featured image for a blog article titled: "${prompt}". Minimalist, clean aesthetic. Aspect ratio 16:9.`,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: 'image/jpeg',
+              aspectRatio: '16:9',
+            },
+        });
+
+        if (response.generatedImages && response.generatedImages.length > 0) {
+            return response.generatedImages[0].image.imageBytes;
+        } else {
+            throw new Error("No image was generated by the API.");
+        }
+    } catch (error) {
+        console.error("Error generating image:", error);
+        throw new Error("AI image generation failed. Please check your API key and console for details.");
+    }
+};
+
+
 export const validateApiKey = async (apiKey: string): Promise<boolean> => {
     if (!apiKey) {
         return false;
     }
-
-    // Use a direct fetch call to bypass any SDK issues with error handling for invalid keys.
-    // This provides a reliable way to check the key's validity by inspecting the HTTP response status.
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     try {
         const httpResponse = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                // A minimal, low-cost request body for validation.
-                contents: [{ parts: [{ text: "hi" }] }],
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "hi" }] }] }),
         });
 
-        // The fetch API does not throw an error on 4xx/5xx HTTP statuses.
-        // We must check the `ok` property of the response, which is true for statuses 200-299.
-        // An invalid API key will result in a 400 Bad Request, so `httpResponse.ok` will be false.
         if (httpResponse.ok) {
-            // As an extra check, ensure the response body is valid.
             const data = await httpResponse.json();
             if (data.candidates && data.candidates.length > 0) {
                 return true;
             }
         }
         
-        // If the response was not 'ok' or the body was malformed, the key is invalid.
         const errorData = await httpResponse.json().catch(() => ({ error: 'Could not parse error response.' }));
         console.error("API Key validation failed. Status:", httpResponse.status, "Response:", errorData);
         return false;
 
     } catch (error) {
-        // This catches network-level errors like CORS, DNS issues, or no internet connection.
         console.error("API Key validation failed with a network error:", error);
         return false;
     }

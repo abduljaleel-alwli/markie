@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { INITIAL_MARKDOWN, INITIAL_METADATA } from './constants';
 import { generateSeoMetadata, convertMarkdownToSemanticHtml } from './services/geminiService';
 import { generateFullHtml } from './services/htmlGenerator';
@@ -7,10 +8,13 @@ import InputPanel from './components/InputPanel';
 import OutputTabs from './components/OutputTabs';
 import ApiKeyModal from './components/ApiKeyModal';
 import SettingsModal from './components/SettingsModal';
+import ArticleGenerator from './components/ArticleGenerator';
 import { NewLogoIcon, MoonIcon, SunIcon, LogoOutlineIcon } from './components/icons';
 import { useTranslations, Language } from './hooks/useTranslations';
 import { remark } from 'remark';
 import html from 'remark-html';
+
+type Page = 'converter' | 'generator';
 
 function App() {
     const [markdownText, setMarkdownText] = useState<string>(INITIAL_MARKDOWN);
@@ -21,6 +25,7 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini-api-key'));
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState<Page>('converter');
     
     const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('theme') as Theme | null;
@@ -129,6 +134,26 @@ function App() {
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
     const toggleLanguage = () => setLanguage(prev => prev === 'en' ? 'ar' : 'en');
+    
+    const NavButton: React.FC<{ page: Page; children: React.ReactNode }> = ({ page, children }) => (
+        <button
+            onClick={() => setCurrentPage(page)}
+            className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                currentPage === page
+                    ? 'text-white'
+                    : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+            }`}
+        >
+            {children}
+            {currentPage === page && (
+                 <motion.div
+                    className="absolute inset-0 bg-cyan-500 rounded-lg -z-10"
+                    layoutId="navIndicator"
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                />
+            )}
+        </button>
+    );
 
     return (
         <div className="bg-slate-50 dark:bg-zinc-950 min-h-screen font-sans transition-colors duration-300 flex flex-col">
@@ -146,10 +171,18 @@ function App() {
                     <div className="flex justify-between items-center h-20">
                         <div className="flex items-center gap-3">
                             <NewLogoIcon className="h-9 w-9" />
-                            <h1 className="text-xl font-bold text-slate-800 dark:text-zinc-200 hidden sm:block">
+                             <h1 className="text-xl font-bold text-slate-800 dark:text-zinc-200 hidden sm:block">
                                 {t('appTitle')}
                             </h1>
                         </div>
+                        
+                        <div className="flex-grow flex items-center justify-center">
+                            <div className="bg-slate-200/60 dark:bg-zinc-800/60 p-1 rounded-xl flex items-center gap-1">
+                                <NavButton page="converter">{t('converter')}</NavButton>
+                                <NavButton page="generator">{t('articleGenerator')}</NavButton>
+                            </div>
+                        </div>
+
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={toggleLanguage}
@@ -177,31 +210,35 @@ function App() {
             </header>
 
             <main className="max-w-[100rem] mx-auto p-4 sm:p-6 lg:p-8 w-full flex-grow">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                    <div className="lg:sticky lg:top-24 space-y-8">
-                       <InputPanel
-                            metadata={metadata}
-                            onMetadataChange={setMetadata}
-                            markdownText={markdownText}
-                            onMarkdownChange={setMarkdownText}
-                            onConvert={handleConvertMarkdown}
-                            onGenerateSeo={handleGenerateSeo}
-                            onGenerateAll={handleGenerateAll}
-                            isConverting={isConverting}
-                            isGeneratingSeo={isGeneratingSeo}
-                            isApiKeySet={isApiKeySet}
-                            error={error}
+                 {currentPage === 'converter' ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        <div className="lg:sticky lg:top-24 space-y-8">
+                           <InputPanel
+                                metadata={metadata}
+                                onMetadataChange={setMetadata}
+                                markdownText={markdownText}
+                                onMarkdownChange={setMarkdownText}
+                                onConvert={handleConvertMarkdown}
+                                onGenerateSeo={handleGenerateSeo}
+                                onGenerateAll={handleGenerateAll}
+                                isConverting={isConverting}
+                                isGeneratingSeo={isGeneratingSeo}
+                                isApiKeySet={isApiKeySet}
+                                error={error}
+                                language={language}
+                            />
+                        </div>
+                        
+                        <OutputTabs 
+                            fullHtml={fullHtml} 
+                            htmlBody={htmlBody} 
+                            metadata={metadata} 
                             language={language}
                         />
                     </div>
-                    
-                    <OutputTabs 
-                        fullHtml={fullHtml} 
-                        htmlBody={htmlBody} 
-                        metadata={metadata} 
-                        language={language}
-                    />
-                </div>
+                 ) : (
+                    <ArticleGenerator apiKey={apiKey} language={language} />
+                 )}
             </main>
             
             <footer className="py-6 border-t border-slate-200 dark:border-zinc-800">
