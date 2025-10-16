@@ -210,35 +210,35 @@ function App() {
             </header>
 
             <main className="max-w-[100rem] mx-auto p-4 sm:p-6 lg:p-8 w-full flex-grow">
-                 {currentPage === 'converter' ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                        <div className="lg:sticky lg:top-24 space-y-8">
-                           <InputPanel
-                                metadata={metadata}
-                                onMetadataChange={setMetadata}
-                                markdownText={markdownText}
-                                onMarkdownChange={setMarkdownText}
-                                onConvert={handleConvertMarkdown}
-                                onGenerateSeo={handleGenerateSeo}
-                                onGenerateAll={handleGenerateAll}
-                                isConverting={isConverting}
-                                isGeneratingSeo={isGeneratingSeo}
-                                isApiKeySet={isApiKeySet}
-                                error={error}
-                                language={language}
-                            />
-                        </div>
-                        
-                        <OutputTabs 
-                            fullHtml={fullHtml} 
-                            htmlBody={htmlBody} 
-                            metadata={metadata} 
+                <div className={currentPage === 'converter' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 items-start" : "hidden"}>
+                    <div className="lg:sticky lg:top-24 space-y-8">
+                        <InputPanel
+                            metadata={metadata}
+                            onMetadataChange={setMetadata}
+                            markdownText={markdownText}
+                            onMarkdownChange={setMarkdownText}
+                            onConvert={handleConvertMarkdown}
+                            onGenerateSeo={handleGenerateSeo}
+                            onGenerateAll={handleGenerateAll}
+                            isConverting={isConverting}
+                            isGeneratingSeo={isGeneratingSeo}
+                            isApiKeySet={isApiKeySet}
+                            error={error}
                             language={language}
                         />
                     </div>
-                 ) : (
+                    
+                    <OutputTabs 
+                        fullHtml={fullHtml} 
+                        htmlBody={htmlBody} 
+                        metadata={metadata} 
+                        language={language}
+                    />
+                </div>
+                
+                <div className={currentPage === 'generator' ? 'block' : 'hidden'}>
                     <ArticleGenerator apiKey={apiKey} language={language} />
-                 )}
+                </div>
             </main>
             
             <footer className="py-6 border-t border-slate-200 dark:border-zinc-800">
