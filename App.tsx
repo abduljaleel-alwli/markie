@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { INITIAL_MARKDOWN, INITIAL_METADATA } from './constants';
 import { generateSeoMetadata, convertMarkdownToSemanticHtml } from './services/geminiService';
 import { generateFullHtml } from './services/htmlGenerator';
@@ -154,6 +154,42 @@ function App() {
             )}
         </button>
     );
+    
+    const containerVariants: Variants = {
+      hidden: {
+        opacity: 0,
+        transition: {
+          when: "afterChildren",
+          staggerChildren: 0.1,
+          staggerDirection: -1,
+        },
+      },
+      visible: {
+        opacity: 1,
+        transition: {
+          when: "beforeChildren",
+          staggerChildren: 0.15,
+        },
+      },
+    };
+
+    const itemVariants: Variants = {
+      hidden: {
+        y: 40,
+        opacity: 0,
+        transition: { type: 'spring', stiffness: 200, damping: 20 }
+      },
+      visible: {
+        y: 0,
+        opacity: 1,
+        transition: { type: 'spring', stiffness: 200, damping: 25 }
+      },
+    };
+
+    const pageVariants: Variants = {
+        hidden: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2, delay: 0.4 } },
+        visible: { opacity: 1, pointerEvents: 'auto', transition: { duration: 0.2 } },
+    }
 
     return (
         <div className="bg-slate-50 dark:bg-zinc-950 min-h-screen font-sans transition-colors duration-300 flex flex-col">
@@ -208,41 +244,64 @@ function App() {
                     </div>
                 </div>
             </header>
-
+            
             <main className="max-w-[100rem] mx-auto p-4 sm:p-6 lg:p-8 w-full flex-grow">
-                <div className={currentPage === 'converter' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 items-start" : "hidden"}>
-                    <div className="lg:sticky lg:top-24 space-y-8">
-                        <InputPanel
-                            metadata={metadata}
-                            onMetadataChange={setMetadata}
-                            markdownText={markdownText}
-                            onMarkdownChange={setMarkdownText}
-                            onConvert={handleConvertMarkdown}
-                            onGenerateSeo={handleGenerateSeo}
-                            onGenerateAll={handleGenerateAll}
-                            isConverting={isConverting}
-                            isGeneratingSeo={isGeneratingSeo}
-                            isApiKeySet={isApiKeySet}
-                            error={error}
-                            language={language}
-                        />
-                    </div>
-                    
-                    <OutputTabs 
-                        fullHtml={fullHtml} 
-                        htmlBody={htmlBody} 
-                        metadata={metadata} 
-                        language={language}
-                    />
-                </div>
-                
-                <div className={currentPage === 'generator' ? 'block' : 'hidden'}>
-                    <ArticleGenerator apiKey={apiKey} language={language} />
+                 <div className="relative min-h-[80vh]">
+                    <motion.div
+                        style={{ position: 'absolute', width: '100%' }}
+                        initial="visible"
+                        animate={currentPage === 'converter' ? 'visible' : 'hidden'}
+                        variants={pageVariants}
+                    >
+                        <motion.div
+                           className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start"
+                           variants={containerVariants}
+                        >
+                           <motion.div className="lg:sticky lg:top-24 space-y-8" variants={itemVariants}>
+                                <InputPanel
+                                    metadata={metadata}
+                                    onMetadataChange={setMetadata}
+                                    markdownText={markdownText}
+                                    onMarkdownChange={setMarkdownText}
+                                    onConvert={handleConvertMarkdown}
+                                    onGenerateSeo={handleGenerateSeo}
+                                    onGenerateAll={handleGenerateAll}
+                                    isConverting={isConverting}
+                                    isGeneratingSeo={isGeneratingSeo}
+                                    isApiKeySet={isApiKeySet}
+                                    error={error}
+                                    language={language}
+                                />
+                            </motion.div>
+                            
+                            <motion.div variants={itemVariants}>
+                                <OutputTabs 
+                                    fullHtml={fullHtml} 
+                                    htmlBody={htmlBody} 
+                                    metadata={metadata} 
+                                    language={language}
+                                />
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                        
+                    <motion.div
+                        style={{ position: 'absolute', width: '100%' }}
+                        initial="hidden"
+                        animate={currentPage === 'generator' ? 'visible' : 'hidden'}
+                        variants={pageVariants}
+                    >
+                       <motion.div variants={containerVariants}>
+                           <motion.div variants={itemVariants}>
+                               <ArticleGenerator apiKey={apiKey} language={language} />
+                            </motion.div>
+                       </motion.div>
+                    </motion.div>
                 </div>
             </main>
             
             <footer className="py-6 border-t border-slate-200 dark:border-zinc-800">
-                <div className="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 dark:text-zinc-500">
+                <div className="max-w-[100rem] mx-auto px-4 sm:px-6 lg:p-8 text-center text-sm text-slate-500 dark:text-zinc-500">
                     <p>&copy; {new Date().getFullYear()} <a href="https://shamlltech.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">Shamll Tech</a>. All rights reserved.</p>
                 </div>
             </footer>
