@@ -32,19 +32,14 @@ interface TabButtonProps {
 const TabButton: React.FC<TabButtonProps> = ({ text, icon, onClick, isActive }) => (
     <button
         onClick={onClick}
-        className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 focus:ring-cyan-500 ${
-            isActive ? 'text-white' : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-200/60 dark:hover:bg-zinc-800/60'
+        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 focus:ring-cyan-500 ${
+            isActive 
+                ? 'bg-cyan-500 text-white' 
+                : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-200/60 dark:hover:bg-zinc-800/60'
         }`}
     >
         {icon}
         {text}
-        {isActive && (
-            <motion.div
-                className="absolute inset-0 bg-cyan-500 rounded-lg -z-10"
-                layoutId="inputTabIndicator"
-                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            />
-        )}
     </button>
 );
 

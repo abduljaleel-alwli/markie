@@ -1,35 +1,10 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
+import type { ArticleOutline } from '../types';
 
 interface SeoSuggestion {
     title: string;
     description: string;
 }
-
-export interface ArticleOutline {
-    introduction_summary: string;
-    sections: {
-        section_title: string;
-        section_summary: string;
-    }[];
-    conclusion_summary: string;
-    faq_section?: {
-        faq_title: string;
-        questions: {
-            question: string;
-            answer: string;
-        }[];
-    };
-    data_table?: {
-        table_title: string;
-        headers: string[];
-        rows: string[][];
-    };
-    quote?: {
-        quote_text: string;
-        quote_author: string;
-    };
-}
-
 
 export const generateSeoMetadata = async (markdownText: string, apiKey: string): Promise<SeoSuggestion> => {
     if (!apiKey) {
