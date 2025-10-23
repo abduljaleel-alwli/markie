@@ -272,20 +272,45 @@ export const generateArticleOutline = async (prompt: string, apiKey: string): Pr
     }
 };
 
-export const generateImage = async (prompt: string, apiKey: string): Promise<string> => {
+export const generateImage = async (
+    title: string, 
+    apiKey: string, 
+    style: string, 
+    aspectRatio: string,
+    includeTitleInImage: boolean,
+    imageTextLanguage: string,
+    customImageText: string
+): Promise<string> => {
     if (!apiKey) {
         throw new Error("Google Gemini API key not provided.");
     }
     const ai = new GoogleGenAI({ apiKey });
 
+    let imagePrompt = `A high-quality, ${style} featured image for a blog article. The image should be visually stunning, clean, and professional. The subject of the image should be related to the article title: "${title}".`;
+
+    const textElements: string[] = [];
+    if (includeTitleInImage) {
+        textElements.push(`the article title "${title}"`);
+    }
+    if (customImageText) {
+        textElements.push(`the custom text "${customImageText}"`);
+    }
+
+    if (textElements.length > 0) {
+        imagePrompt += ` The image MUST prominently feature text. Specifically, include ${textElements.join(' and ')}.`;
+        imagePrompt += ` All text MUST be written in ${imageTextLanguage}. The text should be highly legible, aesthetically pleasing, and well-integrated into the image's composition.`;
+    } else {
+        imagePrompt += ` The image should be purely visual and MUST NOT contain any text or words.`;
+    }
+
     try {
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
-            prompt: `A high-quality, photorealistic featured image for a blog article titled: "${prompt}". Minimalist, clean aesthetic. Aspect ratio 16:9.`,
+            prompt: imagePrompt,
             config: {
               numberOfImages: 1,
               outputMimeType: 'image/jpeg',
-              aspectRatio: '16:9',
+              aspectRatio: aspectRatio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
             },
         });
 

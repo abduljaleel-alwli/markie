@@ -8,6 +8,9 @@ import {
     CONTENT_TYPE_OPTIONS,
     AUDIENCE_OPTIONS,
     WRITING_STYLE_OPTIONS,
+    IMAGE_STYLE_OPTIONS,
+    IMAGE_ASPECT_RATIO_OPTIONS,
+    LOGO_PLACEMENT_OPTIONS,
 } from '../constants';
 import type { SelectOption, Theme, ArticleGeneratorState, ResultTab } from '../types';
 import { locales } from '../i18n/locales';
@@ -52,6 +55,7 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
     const t = useTranslations(language);
     const [copied, setCopied] = useState(false);
     const mainContentRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     const scrollToMain = useCallback(() => {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -78,6 +82,17 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
         });
     };
 
+    const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setState(p => ({ ...p, logoImage: e.target?.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const useSelectOptions = (options: SelectOption[], placeholderKey?: keyof typeof locales.en) => {
         return useMemo(() => {
             const mappedOptions = options.map(opt => ({ value: opt.value, label: language === 'ar' ? opt.label_ar : opt.label_en }));
@@ -91,6 +106,10 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
     const contentTypeOptions = useSelectOptions(CONTENT_TYPE_OPTIONS, 'selectContentType');
     const audienceOptions = useSelectOptions(AUDIENCE_OPTIONS, 'selectAudience');
     const writingStyleOptions = useSelectOptions(WRITING_STYLE_OPTIONS, 'selectWritingStyle');
+    const imageStyleOptions = useSelectOptions(IMAGE_STYLE_OPTIONS);
+    const imageAspectRatioOptions = useSelectOptions(IMAGE_ASPECT_RATIO_OPTIONS);
+    const logoPlacementOptions = useSelectOptions(LOGO_PLACEMENT_OPTIONS);
+
 
     const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {value: string, label: string}[]) => (
         <div>
@@ -183,6 +202,49 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                     )}
                     </AnimatePresence>
                     <ToggleSwitch id="google-search-toggle" label={t('useGoogleSearch')} checked={state.useGoogleSearch} onChange={(c) => setState(p => ({...p, useGoogleSearch: c}))} />
+                </SidebarCard>
+                
+                <SidebarCard title={t('imageSettings')}>
+                    {renderSelect('imageStyle', t('imageStyle'), state.imageStyle, (e) => setState(p => ({...p, imageStyle: e.target.value})), imageStyleOptions)}
+                    {renderSelect('aspectRatio', t('aspectRatio'), state.imageAspectRatio, (e) => setState(p => ({...p, imageAspectRatio: e.target.value})), imageAspectRatioOptions)}
+                     <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
+                        <ToggleSwitch id="title-in-image-toggle" label={t('includeTitleInImage')} checked={state.includeTitleInImage} onChange={(c) => setState(p => ({...p, includeTitleInImage: c}))} />
+                         <div>
+                            <label htmlFor="customImageText" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('customImageText')}</label>
+                            <input id="customImageText" type="text" value={state.customImageText} onChange={(e) => setState(p => ({...p, customImageText: e.target.value}))} placeholder={t('customImageTextPlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
+                        </div>
+
+                        <AnimatePresence>
+                            {(state.includeTitleInImage || state.customImageText.trim() !== '') && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                    {renderSelect('imageTextLanguage', t('imageTextLanguage'), state.imageTextLanguage, (e) => setState(p => ({...p, imageTextLanguage: e.target.value})), languageOptions)}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                    <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
+                        <ToggleSwitch id="embed-logo-toggle" label={t('embedLogo')} checked={state.embedLogo} onChange={(c) => setState(p => ({...p, embedLogo: c}))} />
+                         <AnimatePresence>
+                            {state.embedLogo && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-4">
+                                    <div className="space-y-2">
+                                        <input type="file" accept="image/png, image/jpeg" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" />
+                                        <button onClick={() => fileInputRef.current?.click()} className="w-full text-sm font-semibold bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 py-2 px-4 rounded-lg transition-colors">{t('uploadLogo')}</button>
+                                        <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">{t('logoUploadInstructions')}</p>
+                                    </div>
+                                    {state.logoImage && (
+                                        <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-zinc-800/60 rounded-lg">
+                                            <img src={state.logoImage} alt="Logo Preview" className="h-12 w-12 object-contain rounded-md bg-white dark:bg-zinc-700 p-1" />
+                                            <div className="flex-grow">
+                                                {renderSelect('logoPlacement', t('logoPlacement'), state.logoPlacement, (e) => setState(p => ({...p, logoPlacement: e.target.value})), logoPlacementOptions)}
+                                            </div>
+                                            <button onClick={() => setState(p => ({...p, logoImage: null}))} className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold">{t('removeLogo')}</button>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </SidebarCard>
 
                 <button onClick={handlers.handleGenerateOutline} disabled={state.isGeneratingOutline || state.isGeneratingArticle || !apiKey} className="w-full flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold text-white rounded-lg shadow-md bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-zinc-700 transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/50">

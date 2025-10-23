@@ -75,6 +75,14 @@ export interface ArticleGeneratorState {
     generatedImage: string | null;
     isGeneratingImage: boolean;
     imageError: string | null;
+    imageStyle: string;
+    imageAspectRatio: string;
+    includeTitleInImage: boolean;
+    imageTextLanguage: string;
+    customImageText: string;
+    embedLogo: boolean;
+    logoImage: string | null;
+    logoPlacement: string;
     outline: ArticleOutline | null;
     isGeneratingOutline: boolean;
 }

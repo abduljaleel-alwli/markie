@@ -9,6 +9,7 @@ import {
     generateArticleOutline, 
     generateImage 
 } from './services/geminiService';
+import { embedLogoOnImage } from './services/imageService';
 import { generateFullHtml } from './services/htmlGenerator';
 import type { Metadata, Theme, ArticleGeneratorState, ArticleOutline, ResultTab, Page } from './types';
 import InputPanel from './components/InputPanel';
@@ -50,6 +51,14 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     generatedImage: null,
     isGeneratingImage: false,
     imageError: null,
+    imageStyle: 'photorealistic',
+    imageAspectRatio: '16:9',
+    includeTitleInImage: true,
+    imageTextLanguage: 'arabic',
+    customImageText: '',
+    embedLogo: false,
+    logoImage: null,
+    logoPlacement: 'bottom-right',
     outline: null,
     isGeneratingOutline: false,
 };
@@ -341,10 +350,26 @@ function App() {
         if (!apiKey || !generatorState.title.trim()) return;
         setGeneratorState(p => ({ ...p, isGeneratingImage: true, imageError: null, generatedImage: null, status: t('generatingImage') }));
         try {
-            const base64Data = await generateImage(generatorState.title, apiKey);
+            const base64Data = await generateImage(
+                generatorState.title, 
+                apiKey,
+                generatorState.imageStyle,
+                generatorState.imageAspectRatio,
+                generatorState.includeTitleInImage,
+                generatorState.imageTextLanguage,
+                generatorState.customImageText
+            );
+            
+            let finalImage = `data:image/jpeg;base64,${base64Data}`;
+            
+            if (generatorState.embedLogo && generatorState.logoImage) {
+                setGeneratorState(p => ({...p, status: t('embeddingLogo')}));
+                finalImage = await embedLogoOnImage(finalImage, generatorState.logoImage, generatorState.logoPlacement);
+            }
+
             setGeneratorState(p => ({
                 ...p,
-                generatedImage: `data:image/jpeg;base64,${base64Data}`,
+                generatedImage: finalImage,
                 status: t('imageGeneratedSuccessfully'),
                 currentStep: 4,
                 highestStep: Math.max(p.highestStep, 4),
@@ -355,7 +380,7 @@ function App() {
         } finally {
             setGeneratorState(p => ({ ...p, isGeneratingImage: false }));
         }
-    }, [apiKey, generatorState.title, t]);
+    }, [apiKey, generatorState.title, generatorState.imageStyle, generatorState.imageAspectRatio, generatorState.includeTitleInImage, generatorState.imageTextLanguage, generatorState.customImageText, generatorState.embedLogo, generatorState.logoImage, generatorState.logoPlacement, t]);
     
     const handleDownload = useCallback(() => {
         if (!generatorState.generatedArticle) { setGeneratorState(p => ({ ...p, error: t('noArticleToDownload') })); return; }

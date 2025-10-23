@@ -81,3 +81,28 @@ export const WRITING_STYLE_OPTIONS: SelectOption[] = [
     { value: 'academic', label_en: 'Academic', label_ar: 'أكاديمي' },
     { value: 'creative', label_en: 'Creative', label_ar: 'إبداعي' },
 ];
+
+export const IMAGE_STYLE_OPTIONS: SelectOption[] = [
+    { value: 'photorealistic', label_en: 'Photorealistic', label_ar: 'صورة واقعية' },
+    { value: 'illustrative', label_en: 'Illustrative', label_ar: 'توضيحي' },
+    { value: 'abstract', label_en: 'Abstract', label_ar: 'تجريدي' },
+    { value: 'minimalist', label_en: 'Minimalist', label_ar: 'بسيط' },
+    { value: 'vintage', label_en: 'Vintage', label_ar: 'عتيق' },
+    { value: '3d-render', label_en: '3D Render', label_ar: 'تصيير ثلاثي الأبعاد' },
+];
+
+export const IMAGE_ASPECT_RATIO_OPTIONS: SelectOption[] = [
+    { value: '16:9', label_en: 'Landscape (16:9)', label_ar: 'أفقي (16:9)' },
+    { value: '1:1', label_en: 'Square (1:1)', label_ar: 'مربع (1:1)' },
+    { value: '9:16', label_en: 'Portrait (9:16)', label_ar: 'عمودي (9:16)' },
+    { value: '4:3', label_en: 'Standard (4:3)', label_ar: 'قياسي (4:3)' },
+    { value: '3:4', label_en: 'Standard Portrait (3:4)', label_ar: 'قياسي عمودي (3:4)' },
+];
+
+export const LOGO_PLACEMENT_OPTIONS: SelectOption[] = [
+    { value: 'bottom-right', label_en: 'Bottom Right', label_ar: 'أسفل اليمين' },
+    { value: 'bottom-left', label_en: 'Bottom Left', label_ar: 'أسفل اليسار' },
+    { value: 'top-right', label_en: 'Top Right', label_ar: 'أعلى اليمين' },
+    { value: 'top-left', label_en: 'Top Left', label_ar: 'أعلى اليسار' },
+    { value: 'center', label_en: 'Center', label_ar: 'الوسط' },
+];
