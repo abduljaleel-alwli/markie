@@ -8,6 +8,7 @@ import {
     CONTENT_TYPE_OPTIONS,
     AUDIENCE_OPTIONS,
     WRITING_STYLE_OPTIONS,
+    IMAGE_MODEL_OPTIONS,
     IMAGE_STYLE_OPTIONS,
     IMAGE_ASPECT_RATIO_OPTIONS,
     LOGO_PLACEMENT_OPTIONS,
@@ -106,9 +107,12 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
     const contentTypeOptions = useSelectOptions(CONTENT_TYPE_OPTIONS, 'selectContentType');
     const audienceOptions = useSelectOptions(AUDIENCE_OPTIONS, 'selectAudience');
     const writingStyleOptions = useSelectOptions(WRITING_STYLE_OPTIONS, 'selectWritingStyle');
+    const imageModelOptions = useSelectOptions(IMAGE_MODEL_OPTIONS);
     const imageStyleOptions = useSelectOptions(IMAGE_STYLE_OPTIONS);
     const imageAspectRatioOptions = useSelectOptions(IMAGE_ASPECT_RATIO_OPTIONS);
     const logoPlacementOptions = useSelectOptions(LOGO_PLACEMENT_OPTIONS);
+
+    const isImagenModel = state.imageModel === 'imagen-4.0-generate-001';
 
 
     const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {value: string, label: string}[]) => (
@@ -216,19 +220,26 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                 </SidebarCard>
                 
                 <SidebarCard title={t('imageSettings')}>
+                    {renderSelect('imageModel', t('imageModel'), state.imageModel, (e) => setState(p => ({...p, imageModel: e.target.value})), imageModelOptions)}
                     {renderSelect('imageStyle', t('imageStyle'), state.imageStyle, (e) => setState(p => ({...p, imageStyle: e.target.value})), imageStyleOptions)}
                     {renderSelect('aspectRatio', t('aspectRatio'), state.imageAspectRatio, (e) => setState(p => ({...p, imageAspectRatio: e.target.value})), imageAspectRatioOptions)}
-                     <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
-                        <ToggleSwitch id="title-in-image-toggle" label={t('includeTitleInImage')} checked={state.includeTitleInImage} onChange={(c) => setState(p => ({...p, includeTitleInImage: c}))} />
-                         <div>
-                            <label htmlFor="customImageText" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('customImageText')}</label>
-                            <input id="customImageText" type="text" value={state.customImageText} onChange={(e) => setState(p => ({...p, customImageText: e.target.value}))} placeholder={t('customImageTextPlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
-                        </div>
+                    <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
+                         <AnimatePresence>
+                            {isImagenModel && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-5">
+                                    <ToggleSwitch id="title-in-image-toggle" label={t('includeTitleInImage')} checked={state.includeTitleInImage} onChange={(c) => setState(p => ({...p, includeTitleInImage: c}))} />
+                                    <div>
+                                        <label htmlFor="customImageText" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('customImageText')}</label>
+                                        <input id="customImageText" type="text" value={state.customImageText} onChange={(e) => setState(p => ({...p, customImageText: e.target.value}))} placeholder={t('customImageTextPlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
+                                    </div>
 
-                        <AnimatePresence>
-                            {(state.includeTitleInImage || state.customImageText.trim() !== '') && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                    {renderSelect('imageTextLanguage', t('imageTextLanguage'), state.imageTextLanguage, (e) => setState(p => ({...p, imageTextLanguage: e.target.value})), languageOptions)}
+                                    <AnimatePresence>
+                                        {(state.includeTitleInImage || state.customImageText.trim() !== '') && (
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                                {renderSelect('imageTextLanguage', t('imageTextLanguage'), state.imageTextLanguage, (e) => setState(p => ({...p, imageTextLanguage: e.target.value})), languageOptions)}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             )}
                         </AnimatePresence>

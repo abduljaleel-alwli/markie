@@ -82,6 +82,11 @@ export const WRITING_STYLE_OPTIONS: SelectOption[] = [
     { value: 'creative', label_en: 'Creative', label_ar: 'إبداعي' },
 ];
 
+export const IMAGE_MODEL_OPTIONS: SelectOption[] = [
+    { value: 'gemini-2.5-flash-image', label_en: 'Gemini Flash Image (Standard)', label_ar: 'Gemini Flash Image (قياسي)' },
+    { value: 'imagen-4.0-generate-001', label_en: 'Imagen 4.0 (Advanced)', label_ar: 'Imagen 4.0 (متقدم)' },
+];
+
 export const IMAGE_STYLE_OPTIONS: SelectOption[] = [
     { value: 'photorealistic', label_en: 'Photorealistic', label_ar: 'صورة واقعية' },
     { value: 'illustrative', label_en: 'Illustrative', label_ar: 'توضيحي' },

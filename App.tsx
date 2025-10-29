@@ -51,6 +51,7 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     generatedImage: null,
     isGeneratingImage: false,
     imageError: null,
+    imageModel: 'gemini-2.5-flash-image',
     imageStyle: 'photorealistic',
     imageAspectRatio: '16:9',
     includeTitleInImage: true,
@@ -367,6 +368,7 @@ function App() {
             const base64Data = await generateImage(
                 generatorState.title, 
                 apiKey,
+                generatorState.imageModel,
                 generatorState.imageStyle,
                 generatorState.imageAspectRatio,
                 generatorState.includeTitleInImage,
@@ -394,7 +396,7 @@ function App() {
         } finally {
             setGeneratorState(p => ({ ...p, isGeneratingImage: false }));
         }
-    }, [apiKey, generatorState.title, generatorState.imageStyle, generatorState.imageAspectRatio, generatorState.includeTitleInImage, generatorState.imageTextLanguage, generatorState.customImageText, generatorState.embedLogo, generatorState.logoImage, generatorState.logoPlacement, t]);
+    }, [apiKey, generatorState.title, generatorState.imageModel, generatorState.imageStyle, generatorState.imageAspectRatio, generatorState.includeTitleInImage, generatorState.imageTextLanguage, generatorState.customImageText, generatorState.embedLogo, generatorState.logoImage, generatorState.logoPlacement, t]);
     
     const handleDownload = useCallback(() => {
         if (!generatorState.generatedArticle) { setGeneratorState(p => ({ ...p, error: t('noArticleToDownload') })); return; }

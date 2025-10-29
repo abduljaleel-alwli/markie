@@ -75,6 +75,7 @@ export interface ArticleGeneratorState {
     generatedImage: string | null;
     isGeneratingImage: boolean;
     imageError: string | null;
+    imageModel: string;
     imageStyle: string;
     imageAspectRatio: string;
     includeTitleInImage: boolean;
