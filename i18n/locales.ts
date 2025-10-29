@@ -135,6 +135,8 @@ export const locales = {
     removeLogo: 'Remove',
     logoUploadInstructions: 'Upload a PNG or JPG file.',
     embeddingLogo: 'Embedding logo...',
+    primaryFocus: "Primary Focus / Detailed Prompt",
+    primaryFocusPlaceholder: "e.g., focus on the benefits for small businesses, or compare it with another product.",
   },
   ar: {
     appTitle: 'ماركي',
@@ -272,5 +274,7 @@ export const locales = {
     removeLogo: 'إزالة',
     logoUploadInstructions: 'ارفع ملف PNG أو JPG.',
     embeddingLogo: 'جاري تضمين الشعار...',
+    primaryFocus: "التركيز الأساسي / توجيهات مفصلة",
+    primaryFocusPlaceholder: "مثال: التركيز على الفوائد للشركات الصغيرة، أو مقارنته بمنتج آخر.",
   },
 };

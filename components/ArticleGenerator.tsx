@@ -194,6 +194,17 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                                 {renderSelect('numberOfSections', t('numberOfSections'), state.numberOfSections, (e) => setState(p => ({...p, numberOfSections: e.target.value})), [{ value: '3-5', label: t('sections3to5') }, { value: '5-7', label: t('sections5to7') }, { value: '7-9', label: t('sections7to9') },])}
                                 {renderSelect('introStyle', t('introStyle'), state.introductionStyle, (e) => setState(p => ({...p, introductionStyle: e.target.value})), [{ value: 'Engaging Hook', label: t('introStyleEngaging') }, { value: 'Direct Statement', label: t('introStyleDirect') }, { value: 'Question-based Hook', label: t('introStyleQuestion') },])}
                                 {renderSelect('conclusionStyle', t('conclusionStyle'), state.conclusionStyle, (e) => setState(p => ({...p, conclusionStyle: e.target.value})), [{ value: 'Concise Summary', label: t('conclusionStyleSummary') }, { value: 'Call to Action', label: t('conclusionStyleCta') }, { value: 'Thought-Provoking Question', label: t('conclusionStyleQuestion') },])}
+                                <div>
+                                    <label htmlFor="primaryFocus" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('primaryFocus')}</label>
+                                    <textarea
+                                        id="primaryFocus"
+                                        value={state.primaryFocus}
+                                        onChange={(e) => setState(p => ({ ...p, primaryFocus: e.target.value }))}
+                                        placeholder={t('primaryFocusPlaceholder')}
+                                        rows={3}
+                                        className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                                    />
+                                </div>
                                 <ToggleSwitch id="faq-toggle" label={t('includeFaq')} checked={state.includeFaq} onChange={(c) => setState(p => ({...p, includeFaq: c}))} />
                                 <ToggleSwitch id="table-toggle" label={t('includeTable')} checked={state.includeTable} onChange={(c) => setState(p => ({...p, includeTable: c}))} />
                                 <ToggleSwitch id="quote-toggle" label={t('includeQuote')} checked={state.includeQuote} onChange={(c) => setState(p => ({...p, includeQuote: c}))} />

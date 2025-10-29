@@ -85,4 +85,5 @@ export interface ArticleGeneratorState {
     logoPlacement: string;
     outline: ArticleOutline | null;
     isGeneratingOutline: boolean;
+    primaryFocus: string;
 }

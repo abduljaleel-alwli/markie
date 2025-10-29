@@ -61,6 +61,7 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     logoPlacement: 'bottom-right',
     outline: null,
     isGeneratingOutline: false,
+    primaryFocus: '',
 };
 
 // Moved outside the component to prevent re-creation on every render
@@ -219,7 +220,7 @@ function App() {
 
     // Article Generator Handlers
     const buildOutlinePrompt = useCallback(() => {
-        const { title, articleLanguage, tone, targetAudience, wordCount, keywords, numberOfSections, introductionStyle, conclusionStyle, includeFaq, includeTable, includeQuote } = generatorState;
+        const { title, articleLanguage, tone, targetAudience, wordCount, keywords, numberOfSections, introductionStyle, conclusionStyle, includeFaq, includeTable, includeQuote, primaryFocus } = generatorState;
         const capitalizedLanguage = articleLanguage.charAt(0).toUpperCase() + articleLanguage.slice(1);
         return `You are an expert SEO content strategist. Your task is to create a structured JSON outline for a high-ranking blog article. The outline should be logical, comprehensive, and optimized for search engines and user engagement.
 
@@ -230,6 +231,7 @@ function App() {
         - Desired Word Count: Approximately ${wordCount || 600} words
         - Language: ${capitalizedLanguage}
         - Primary Keywords to target: ${keywords || 'N/A'}
+        ${primaryFocus ? `- **Primary Focus/Detailed Instructions:** ${primaryFocus}` : ''}
 
         **Structural & Stylistic Requirements:**
         - Create between ${numberOfSections.split('-')[0]} and ${numberOfSections.split('-')[1]} main section headings (H2s).
@@ -245,17 +247,29 @@ function App() {
     }, [generatorState]);
 
     const buildFullArticlePromptFromOutline = useCallback((outlineToUse: ArticleOutline) => {
-        const { wordCount, tone, targetAudience, writingStyle, articleLanguage, keywords, title } = generatorState;
+        const { wordCount, tone, targetAudience, writingStyle, articleLanguage, keywords, title, primaryFocus } = generatorState;
         const capitalizedLanguage = articleLanguage.charAt(0).toUpperCase() + articleLanguage.slice(1);
+        
+        const instructions = [
+            `**Follow the Outline:** Adhere strictly to the provided JSON outline. The final word count should be approximately ${wordCount || 600} words.`,
+            `**Tone and Style:** Adopt a ${tone || 'professional'} tone suitable for a ${targetAudience || 'general public'} audience. The writing style must be ${writingStyle || 'clear and engaging'}.`,
+            `**Language:** The entire article MUST be written in ${capitalizedLanguage}.`,
+            `**SEO:** Seamlessly and naturally integrate the primary keywords (${keywords || 'N/A'}) throughout the article.`,
+        ];
+    
+        if (primaryFocus) {
+            instructions.push(`**Primary Focus:** Make sure to address the following points or focus: ${primaryFocus}`);
+        }
+    
+        instructions.push(`**Output Format (MANDATORY):** The entire output MUST be a single, valid Markdown document. The article MUST begin with the main title, "${title}", as a Level 1 Heading (H1).`);
+        instructions.push(`**Final Output:** Do NOT include the JSON outline or any meta-commentary. Output only the final, complete Markdown article.`);
+    
+        const numberedInstructions = instructions.map((inst, index) => `${index + 1}.  ${inst}`).join('\n');
+
         return `You are an expert SEO content writer. Your mission is to write a comprehensive, engaging, and highly-optimized article in Markdown format, based on the provided JSON outline.
 
         **Instructions:**
-        1.  **Follow the Outline:** Adhere strictly to the provided JSON outline. The final word count should be approximately ${wordCount || 600} words.
-        2.  **Tone and Style:** Adopt a ${tone || 'professional'} tone suitable for a ${targetAudience || 'general public'} audience. The writing style must be ${writingStyle || 'clear and engaging'}.
-        3.  **Language:** The entire article MUST be written in ${capitalizedLanguage}.
-        4.  **SEO:** Seamlessly and naturally integrate the primary keywords (${keywords || 'N/A'}) throughout the article.
-        5.  **Output Format (MANDATORY):** The entire output MUST be a single, valid Markdown document. The article MUST begin with the main title, "${title}", as a Level 1 Heading (H1).
-        6.  **Final Output:** Do NOT include the JSON outline or any meta-commentary. Output only the final, complete Markdown article.
+        ${numberedInstructions}
 
         **JSON OUTLINE TO EXPAND:**
         ---
