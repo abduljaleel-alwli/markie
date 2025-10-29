@@ -18,7 +18,6 @@ interface InputPanelProps {
     isConverting: boolean;
     isGeneratingSeo: boolean;
     isApiKeySet: boolean;
-    error: string | null;
     language: Language;
 }
 
@@ -104,7 +103,6 @@ const InputPanel: React.FC<InputPanelProps> = (props) => {
                             <MetadataForm 
                                 metadata={props.metadata} 
                                 onMetadataChange={props.onMetadataChange}
-                                error={props.error}
                                 language={props.language}
                             />
                         )}

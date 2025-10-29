@@ -76,9 +76,9 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
 
 
     const handleCopy = () => {
-        if (!state.generatedArticle) { setState(p => ({ ...p, error: t('noArticleToCopy') })); return; }
+        if (!state.generatedArticle) return;
         navigator.clipboard.writeText(state.generatedArticle).then(() => {
-            setCopied(true); setState(p => ({ ...p, status: t('articleCopied') }));
+            setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         });
     };
@@ -276,14 +276,6 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
 
             {/* Main Content */}
             <main ref={mainContentRef} className="lg:col-span-2 xl:col-span-3 w-full space-y-6">
-                <AnimatePresence>
-                {(state.status || state.error) && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} aria-live="polite" className={`p-4 rounded-xl text-sm font-semibold text-center ${state.error ? 'bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200' : 'bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-200'}`}>
-                        {state.error || state.status}
-                    </motion.div>
-                )}
-                </AnimatePresence>
-
                 {state.highestStep === 1 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center p-10 bg-slate-100/50 dark:bg-zinc-800/60 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700">
                         <h3 className="text-xl font-semibold text-slate-700 dark:text-zinc-300">{t('aiArticleGenerator')}</h3>
@@ -356,7 +348,6 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                             )}
                             {state.activeResultTab === 'image' && (
                                 <div>
-                                    {state.imageError && <p className="p-3 rounded-md text-sm text-center bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200">{state.imageError}</p>}
                                     {state.generatedImage && (
                                         <div className="space-y-4">
                                             <img src={state.generatedImage} alt={state.title || 'Generated featured image'} className="w-full rounded-lg shadow-md border border-slate-200 dark:border-zinc-700" />

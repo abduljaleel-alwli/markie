@@ -65,8 +65,6 @@ export interface ArticleGeneratorState {
     includeFaq: boolean;
     includeTable: boolean;
     includeQuote: boolean;
-    status: string | null;
-    error: string | null;
     isGeneratingKeywords: boolean;
     isGeneratingArticle: boolean;
     generatedArticle: string;
@@ -74,7 +72,6 @@ export interface ArticleGeneratorState {
     sources: any[];
     generatedImage: string | null;
     isGeneratingImage: boolean;
-    imageError: string | null;
     imageModel: string;
     imageStyle: string;
     imageAspectRatio: string;

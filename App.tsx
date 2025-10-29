@@ -19,6 +19,7 @@ import SettingsModal from './components/SettingsModal';
 import ArticleGenerator from './components/ArticleGenerator';
 import { NewLogoIcon, MoonIcon, SunIcon, LogoOutlineIcon } from './components/icons';
 import { useTranslations, Language } from './hooks/useTranslations';
+import { useToast } from './hooks/useToast';
 import { remark } from 'remark';
 import html from 'remark-html';
 
@@ -41,8 +42,6 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     includeFaq: false,
     includeTable: false,
     includeQuote: false,
-    status: null,
-    error: null,
     isGeneratingKeywords: false,
     isGeneratingArticle: false,
     generatedArticle: '',
@@ -50,7 +49,6 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     sources: [],
     generatedImage: null,
     isGeneratingImage: false,
-    imageError: null,
     imageModel: 'gemini-2.5-flash-image',
     imageStyle: 'photorealistic',
     imageAspectRatio: '16:9',
@@ -102,7 +100,6 @@ function App() {
     const [fullHtml, setFullHtml] = useState<string>('');
     const [isConverting, setIsConverting] = useState<boolean>(false);
     const [isGeneratingSeo, setIsGeneratingSeo] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<Metadata>(INITIAL_METADATA);
 
     // Article Generator State
@@ -124,6 +121,7 @@ function App() {
     });
 
     const t = useTranslations(language);
+    const { addToast } = useToast();
     const isApiKeySet = !!apiKey;
 
     // Converter Logic
@@ -160,49 +158,53 @@ function App() {
         if (key) {
             localStorage.setItem('gemini-api-key', key);
             setApiKey(key);
+            addToast(t('apiKeySaved'), 'success');
         }
     };
 
     const handleClearApiKey = () => {
         localStorage.removeItem('gemini-api-key');
         setApiKey(null);
+        addToast(t('apiKeyCleared'), 'info');
     };
 
     // Converter Handlers
     const handleGenerateSeo = useCallback(async () => {
         if (!isApiKeySet || !apiKey) return;
-        setError(null);
         setIsGeneratingSeo(true);
+        addToast(t('generating'), 'info');
         try {
             const suggestions = await generateSeoMetadata(markdownText, apiKey);
             setMetadata(prev => ({ ...prev, ...suggestions }));
+            addToast(t('generateSeoSuccess'), 'success');
         } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            addToast(e instanceof Error ? e.message : String(e), 'error');
         } finally {
             setIsGeneratingSeo(false);
         }
-    }, [markdownText, isApiKeySet, apiKey]);
+    }, [markdownText, isApiKeySet, apiKey, addToast, t]);
 
     const handleConvertMarkdown = useCallback(async () => {
         if (!isApiKeySet || !apiKey) return;
-        setError(null);
         setIsConverting(true);
+        addToast(t('smartConversion'), 'info');
         try {
             const semanticHtml = await convertMarkdownToSemanticHtml(markdownText, apiKey);
             setHtmlBody(semanticHtml);
+            addToast(t('convertMarkdownSuccess'), 'success');
         } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            addToast(e instanceof Error ? e.message : String(e), 'error');
             convertMarkdownBasic(markdownText);
         } finally {
             setIsConverting(false);
         }
-    }, [markdownText, isApiKeySet, apiKey, convertMarkdownBasic]);
+    }, [markdownText, isApiKeySet, apiKey, convertMarkdownBasic, addToast, t]);
 
     const handleGenerateAll = useCallback(async () => {
         if (!isApiKeySet || !apiKey) return;
-        setError(null);
         setIsConverting(true);
         setIsGeneratingSeo(true);
+        addToast(t('generating'), 'info');
         try {
             const [suggestions, semanticHtml] = await Promise.all([
                 generateSeoMetadata(markdownText, apiKey),
@@ -210,14 +212,15 @@ function App() {
             ]);
             setMetadata(prev => ({ ...prev, ...suggestions }));
             setHtmlBody(semanticHtml);
+            addToast(t('generateAllSuccess'), 'success');
         } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            addToast(e instanceof Error ? e.message : String(e), 'error');
             convertMarkdownBasic(markdownText);
         } finally {
             setIsConverting(false);
             setIsGeneratingSeo(false);
         }
-    }, [markdownText, isApiKeySet, apiKey, convertMarkdownBasic]);
+    }, [markdownText, isApiKeySet, apiKey, convertMarkdownBasic, addToast, t]);
 
     // Article Generator Handlers
     const buildOutlinePrompt = useCallback(() => {
@@ -279,43 +282,55 @@ function App() {
     }, [generatorState]);
 
     const handleGenerateKeywords = useCallback(async () => {
-        if (!apiKey || !generatorState.title.trim()) { setGeneratorState(p => ({ ...p, error: t('pleaseEnterTitleFirst') })); return; }
-        setGeneratorState(p => ({ ...p, isGeneratingKeywords: true, status: t('generatingKeywords'), error: null }));
+        if (!apiKey) return;
+        if (!generatorState.title.trim()) { 
+            addToast(t('pleaseEnterTitleFirst'), 'error'); 
+            return; 
+        }
+        setGeneratorState(p => ({ ...p, isGeneratingKeywords: true }));
+        addToast(t('generatingKeywords'), 'info');
         try {
             const prompt = `Generate a list of 5 to 10 SEO keywords related to the title: "${generatorState.title}". The keywords should be in the same language as the title. Output as a comma-separated list.`;
             const result = await generateText(prompt, apiKey);
-            setGeneratorState(p => ({ ...p, keywords: result.replace(/^\d+\.\s*/gm, '').replace(/\n/g, ', '), status: t('keywordsGenerated') }));
+            setGeneratorState(p => ({ ...p, keywords: result.replace(/^\d+\.\s*/gm, '').replace(/\n/g, ', ') }));
+            addToast(t('keywordsGenerated'), 'success');
         } catch (e) {
-            setGeneratorState(p => ({ ...p, error: e instanceof Error ? e.message : t('keywordsFailed'), status: null }));
+            addToast(e instanceof Error ? e.message : t('keywordsFailed'), 'error');
         } finally {
             setGeneratorState(p => ({ ...p, isGeneratingKeywords: false }));
         }
-    }, [apiKey, generatorState.title, t]);
+    }, [apiKey, generatorState.title, t, addToast]);
 
     const handleGenerateOutline = useCallback(async () => {
-        if (!apiKey || !generatorState.title.trim()) { setGeneratorState(p => ({ ...p, error: t('pleaseEnterTitleFirst') })); return; }
-        setGeneratorState(p => ({ ...p, isGeneratingOutline: true, status: t('generatingOutline'), error: null, outline: null }));
+        if (!apiKey) return;
+        if (!generatorState.title.trim()) { 
+            addToast(t('pleaseEnterTitleFirst'), 'error'); 
+            return; 
+        }
+        setGeneratorState(p => ({ ...p, isGeneratingOutline: true, outline: null }));
+        addToast(t('generatingOutline'), 'info');
         try {
             const prompt = buildOutlinePrompt();
             const result = await generateArticleOutline(prompt, apiKey);
             setGeneratorState(p => ({
                 ...p,
                 outline: result,
-                status: t('outlineGenerated'),
                 currentStep: 2,
                 highestStep: Math.max(p.highestStep, 2),
                 activeResultTab: 'outline'
             }));
+            addToast(t('outlineGenerated'), 'success');
         } catch (e) {
-            setGeneratorState(p => ({ ...p, error: e instanceof Error ? e.message : 'Failed to generate outline', status: null }));
+            addToast(e instanceof Error ? e.message : 'Failed to generate outline', 'error');
         } finally {
             setGeneratorState(p => ({ ...p, isGeneratingOutline: false }));
         }
-    }, [apiKey, generatorState.title, buildOutlinePrompt, t]);
+    }, [apiKey, generatorState.title, buildOutlinePrompt, t, addToast]);
 
     const handleGenerateArticle = useCallback(async () => {
         if (!apiKey || !generatorState.outline) return;
-        setGeneratorState(p => ({ ...p, isGeneratingArticle: true, status: t('streaming'), error: null, generatedArticle: '', sources: [] }));
+        setGeneratorState(p => ({ ...p, isGeneratingArticle: true, generatedArticle: '', sources: [] }));
+        addToast(t('streaming'), 'info');
 
         let intervalId: number | undefined;
         try {
@@ -347,23 +362,29 @@ function App() {
             setGeneratorState(p => ({
                 ...p,
                 sources: finalResponse?.candidates?.[0]?.groundingMetadata?.groundingChunks || [],
-                status: t('articleGenerated'),
                 currentStep: 3,
                 highestStep: Math.max(p.highestStep, 3),
                 activeResultTab: 'article'
             }));
+            addToast(t('articleGenerated'), 'success');
         } catch (e) {
             if (intervalId) clearInterval(intervalId);
-            setGeneratorState(p => ({ ...p, error: e instanceof Error ? e.message : String(e), status: null, isGeneratingArticle: false }));
+            addToast(e instanceof Error ? e.message : String(e), 'error');
+            setGeneratorState(p => ({ ...p, isGeneratingArticle: false }));
         } finally {
             if (intervalId) clearInterval(intervalId);
             setGeneratorState(p => ({ ...p, isGeneratingArticle: false }));
         }
-    }, [apiKey, generatorState.outline, generatorState.useGoogleSearch, buildFullArticlePromptFromOutline, t]);
+    }, [apiKey, generatorState.outline, generatorState.useGoogleSearch, buildFullArticlePromptFromOutline, t, addToast]);
     
     const handleGenerateImage = useCallback(async () => {
-        if (!apiKey || !generatorState.title.trim()) return;
-        setGeneratorState(p => ({ ...p, isGeneratingImage: true, imageError: null, generatedImage: null, status: t('generatingImage') }));
+        if (!apiKey) return;
+        if (!generatorState.title.trim()) {
+            addToast(t('pleaseEnterTitleFirst'), 'error');
+            return;
+        }
+        setGeneratorState(p => ({ ...p, isGeneratingImage: true, generatedImage: null }));
+        addToast(t('generatingImage'), 'info');
         try {
             const base64Data = await generateImage(
                 generatorState.title, 
@@ -379,27 +400,30 @@ function App() {
             let finalImage = `data:image/jpeg;base64,${base64Data}`;
             
             if (generatorState.embedLogo && generatorState.logoImage) {
-                setGeneratorState(p => ({...p, status: t('embeddingLogo')}));
+                addToast(t('embeddingLogo'), 'info');
                 finalImage = await embedLogoOnImage(finalImage, generatorState.logoImage, generatorState.logoPlacement);
             }
 
             setGeneratorState(p => ({
                 ...p,
                 generatedImage: finalImage,
-                status: t('imageGeneratedSuccessfully'),
                 currentStep: 4,
                 highestStep: Math.max(p.highestStep, 4),
                 activeResultTab: 'image'
             }));
+            addToast(t('imageGeneratedSuccessfully'), 'success');
         } catch (e) {
-            setGeneratorState(p => ({ ...p, imageError: e instanceof Error ? e.message : t('imageGenerationFailed'), status: null }));
+            addToast(e instanceof Error ? e.message : t('imageGenerationFailed'), 'error');
         } finally {
             setGeneratorState(p => ({ ...p, isGeneratingImage: false }));
         }
-    }, [apiKey, generatorState.title, generatorState.imageModel, generatorState.imageStyle, generatorState.imageAspectRatio, generatorState.includeTitleInImage, generatorState.imageTextLanguage, generatorState.customImageText, generatorState.embedLogo, generatorState.logoImage, generatorState.logoPlacement, t]);
+    }, [apiKey, generatorState, t, addToast]);
     
     const handleDownload = useCallback(() => {
-        if (!generatorState.generatedArticle) { setGeneratorState(p => ({ ...p, error: t('noArticleToDownload') })); return; }
+        if (!generatorState.generatedArticle) { 
+            addToast(t('noArticleToDownload'), 'error'); 
+            return; 
+        }
         const blob = new Blob([generatorState.generatedArticle], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -407,8 +431,8 @@ function App() {
         link.href = url; link.download = filename;
         document.body.appendChild(link); link.click();
         document.body.removeChild(link); URL.revokeObjectURL(url);
-        setGeneratorState(p => ({ ...p, status: t('articleDownloaded') }));
-    }, [generatorState.generatedArticle, generatorState.title, t]);
+        addToast(t('articleDownloaded'), 'success');
+    }, [generatorState.generatedArticle, generatorState.title, t, addToast]);
     
     const handleDownloadImage = useCallback(() => {
         if (!generatorState.generatedImage) return;
@@ -417,7 +441,8 @@ function App() {
         link.href = generatorState.generatedImage; link.download = filename;
         document.body.appendChild(link); link.click();
         document.body.removeChild(link);
-    }, [generatorState.generatedImage, generatorState.title]);
+        addToast(t('downloadImage') + ' started.', 'success');
+    }, [generatorState.generatedImage, generatorState.title, addToast, t]);
 
     const handleStepClick = useCallback((stepToGo: number) => {
         setGeneratorState(p => {
@@ -531,7 +556,6 @@ function App() {
                                         isConverting={isConverting}
                                         isGeneratingSeo={isGeneratingSeo}
                                         isApiKeySet={isApiKeySet}
-                                        error={error}
                                         language={language}
                                     />
                                 </div>

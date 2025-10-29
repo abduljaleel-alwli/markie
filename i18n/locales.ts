@@ -140,6 +140,9 @@ export const locales = {
     embeddingLogo: 'Embedding logo...',
     primaryFocus: "Primary Focus / Detailed Prompt",
     primaryFocusPlaceholder: "e.g., focus on the benefits for small businesses, or compare it with another product.",
+    generateSeoSuccess: 'SEO metadata generated successfully!',
+    convertMarkdownSuccess: 'Markdown converted successfully!',
+    generateAllSuccess: 'Content generated and converted successfully!',
   },
   ar: {
     appTitle: 'ماركي',
@@ -282,5 +285,8 @@ export const locales = {
     embeddingLogo: 'جاري تضمين الشعار...',
     primaryFocus: "التركيز الأساسي / توجيهات مفصلة",
     primaryFocusPlaceholder: "مثال: التركيز على الفوائد للشركات الصغيرة، أو مقارنته بمنتج آخر.",
+    generateSeoSuccess: 'تم إنشاء بيانات SEO بنجاح!',
+    convertMarkdownSuccess: 'تم تحويل الماركداون بنجاح!',
+    generateAllSuccess: 'تم إنشاء المحتوى وتحويله بنجاح!',
   },
 };

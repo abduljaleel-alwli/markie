@@ -9,7 +9,6 @@ interface MetadataFormProps {
     metadata: Metadata;
     onMetadataChange: (metadata: Metadata) => void;
     language: Language;
-    error: string | null;
 }
 
 const InputField: React.FC<{ label: string; name: keyof Metadata; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder?: string }> = ({ label, name, value, onChange, placeholder }) => (
@@ -27,7 +26,7 @@ const InputField: React.FC<{ label: string; name: keyof Metadata; value: string;
     </div>
 );
 
-const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onMetadataChange, language, error }) => {
+const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onMetadataChange, language }) => {
     const t = useTranslations(language);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,18 +38,6 @@ const MetadataForm: React.FC<MetadataFormProps> = ({ metadata, onMetadataChange,
 
     return (
         <div className="p-8">
-            <AnimatePresence>
-             {error && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200 p-3 rounded-md mb-4 text-sm"
-                >
-                    {error}
-                </motion.div>
-             )}
-            </AnimatePresence>
             <div className="space-y-5">
                 <InputField label={t('title')} name="title" value={metadata.title} onChange={handleChange} placeholder="Article Title"/>
                 <InputField label={t('description')} name="description" value={metadata.description} onChange={handleChange} placeholder="Meta description for SEO"/>
