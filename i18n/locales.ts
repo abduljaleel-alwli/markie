@@ -143,6 +143,7 @@ export const locales = {
     generateSeoSuccess: 'SEO metadata generated successfully!',
     convertMarkdownSuccess: 'Markdown converted successfully!',
     generateAllSuccess: 'Content generated and converted successfully!',
+    wordCounter: 'Words',
   },
   ar: {
     appTitle: 'ماركي',
@@ -288,5 +289,6 @@ export const locales = {
     generateSeoSuccess: 'تم إنشاء بيانات SEO بنجاح!',
     convertMarkdownSuccess: 'تم تحويل الماركداون بنجاح!',
     generateAllSuccess: 'تم إنشاء المحتوى وتحويله بنجاح!',
+    wordCounter: 'كلمة',
   },
 };

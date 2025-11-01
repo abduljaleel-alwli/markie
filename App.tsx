@@ -22,6 +22,7 @@ import { useTranslations, Language } from './hooks/useTranslations';
 import { useToast } from './hooks/useToast';
 import { remark } from 'remark';
 import html from 'remark-html';
+import remarkGfm from 'remark-gfm';
 
 const initialArticleGeneratorState: ArticleGeneratorState = {
     currentStep: 1,
@@ -126,7 +127,7 @@ function App() {
 
     // Converter Logic
     const convertMarkdownBasic = useCallback(async (markdown: string) => {
-        const result = await remark().use(html).process(markdown);
+        const result = await remark().use(remarkGfm).use(html).process(markdown);
         setHtmlBody(result.toString());
     }, []);
 

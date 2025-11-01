@@ -22,6 +22,14 @@ This is a sample article written in Markdown. This tool will convert it into SEO
 *   Automatic SEO meta tags
 *   JSON-LD structured data for rich results
 
+### GFM Table Example
+
+| Feature         | Benefit                                |
+|-----------------|----------------------------------------|
+| Semantic HTML   | Better for SEO and accessibility.      |
+| AI Enhancements | Saves time and improves quality.       |
+| Live Preview    | See your changes instantly.            |
+
 ### Code Example
 
 \`\`\`javascript
