@@ -71,6 +71,7 @@ export interface ArticleGeneratorState {
     useGoogleSearch: boolean;
     sources: any[];
     generatedImage: string | null;
+    imageHistory: string[];
     isGeneratingImage: boolean;
     imageModel: string;
     imageStyle: string;

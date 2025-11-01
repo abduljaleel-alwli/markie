@@ -49,6 +49,7 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     useGoogleSearch: false,
     sources: [],
     generatedImage: null,
+    imageHistory: [],
     isGeneratingImage: false,
     imageModel: 'gemini-2.5-flash-image',
     imageStyle: 'photorealistic',
@@ -408,6 +409,7 @@ function App() {
             setGeneratorState(p => ({
                 ...p,
                 generatedImage: finalImage,
+                imageHistory: [finalImage, ...p.imageHistory].slice(0, 10),
                 currentStep: 4,
                 highestStep: Math.max(p.highestStep, 4),
                 activeResultTab: 'image'

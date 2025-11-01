@@ -362,6 +362,30 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                                             </button>
                                         </div>
                                     )}
+
+                                    {state.imageHistory.length > 0 && (
+                                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-zinc-700">
+                                            <h4 className="text-lg font-semibold text-slate-800 dark:text-zinc-200 mb-4">{t('imageHistory')}</h4>
+                                            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                                                {state.imageHistory.map((imgSrc, index) => (
+                                                    <motion.button
+                                                        key={index}
+                                                        onClick={() => setState(p => ({ ...p, generatedImage: imgSrc }))}
+                                                        className={`relative rounded-lg overflow-hidden focus:outline-none group transition-all duration-200 ${
+                                                            state.generatedImage === imgSrc 
+                                                                ? 'ring-4 ring-cyan-500 ring-offset-2 dark:ring-offset-zinc-900' 
+                                                                : 'ring-2 ring-transparent hover:ring-slate-300 dark:hover:ring-zinc-600'
+                                                        }`}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        <img src={imgSrc} alt={`History image ${index + 1}`} className="w-full h-full object-cover aspect-square" />
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             )}
                         </div>

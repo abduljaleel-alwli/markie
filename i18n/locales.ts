@@ -144,6 +144,7 @@ export const locales = {
     convertMarkdownSuccess: 'Markdown converted successfully!',
     generateAllSuccess: 'Content generated and converted successfully!',
     wordCounter: 'Words',
+    imageHistory: 'Image History',
   },
   ar: {
     appTitle: 'ماركي',
@@ -290,5 +291,6 @@ export const locales = {
     convertMarkdownSuccess: 'تم تحويل الماركداون بنجاح!',
     generateAllSuccess: 'تم إنشاء المحتوى وتحويله بنجاح!',
     wordCounter: 'كلمة',
+    imageHistory: 'سجل الصور',
   },
 };
