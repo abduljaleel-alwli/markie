@@ -58,7 +58,6 @@ export interface ArticleGeneratorState {
     targetAudience: string;
     writingStyle: string;
     wordCount: string;
-    showAdvanced: boolean;
     numberOfSections: string;
     introductionStyle: string;
     conclusionStyle: string;

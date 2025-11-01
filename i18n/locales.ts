@@ -110,6 +110,7 @@ export const locales = {
     sections7to9: '7-9 Headings',
     introStyle: 'Introduction Style',
     conclusionStyle: 'Conclusion Style',
+
     includeFaq: 'Include FAQ Section',
     includeTable: 'Include Data Table',
     includeQuote: 'Include a Quote',
@@ -145,6 +146,9 @@ export const locales = {
     generateAllSuccess: 'Content generated and converted successfully!',
     wordCounter: 'Words',
     imageHistory: 'Image History',
+    articleDetails: 'Article Details',
+    basic: 'Basic',
+    advanced: 'Advanced',
   },
   ar: {
     appTitle: 'ماركي',
@@ -292,5 +296,8 @@ export const locales = {
     generateAllSuccess: 'تم إنشاء المحتوى وتحويله بنجاح!',
     wordCounter: 'كلمة',
     imageHistory: 'سجل الصور',
+    articleDetails: 'تفاصيل المقال',
+    basic: 'أساسي',
+    advanced: 'متقدم',
   },
 };

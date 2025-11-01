@@ -36,7 +36,6 @@ const initialArticleGeneratorState: ArticleGeneratorState = {
     targetAudience: '',
     writingStyle: '',
     wordCount: '600',
-    showAdvanced: false,
     numberOfSections: '3-5',
     introductionStyle: 'Engaging Hook',
     conclusionStyle: 'Concise Summary',

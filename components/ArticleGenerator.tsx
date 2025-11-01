@@ -35,13 +35,6 @@ interface ArticleGeneratorProps {
 }
 
 // Helper components moved outside ArticleGenerator to prevent re-creation on re-renders
-const SidebarCard: React.FC<{children: React.ReactNode, title?: string}> = ({ children, title }) => (
-    <div className="bg-white dark:bg-zinc-900/70 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm p-6 space-y-5">
-        {title && <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-200">{title}</h3>}
-        {children}
-    </div>
-);
-
 const ToggleSwitch: React.FC<{id: string, label: string, checked: boolean, onChange: (checked: boolean) => void}> = ({ id, label, checked, onChange }) => (
     <div className="flex items-center justify-between bg-slate-100 dark:bg-zinc-800/60 p-3 rounded-lg">
         <label htmlFor={id} className="text-sm font-medium text-slate-700 dark:text-zinc-200 cursor-pointer">{label}</label>
@@ -51,10 +44,27 @@ const ToggleSwitch: React.FC<{id: string, label: string, checked: boolean, onCha
     </div>
 );
 
+const TabButton: React.FC<{isActive: boolean, onClick: () => void, children: React.ReactNode}> = ({ isActive, onClick, children }) => (
+    <button
+        onClick={onClick}
+        className={`flex-1 px-4 py-2 text-sm font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 ${
+            isActive
+                ? 'bg-cyan-500 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700/60'
+        }`}
+    >
+        {children}
+    </button>
+);
+
 
 const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, theme, state, setState, handlers }) => {
     const t = useTranslations(language);
     const [copied, setCopied] = useState(false);
+    const [mainSettingsTab, setMainSettingsTab] = useState('article');
+    const [articleSettingsTab, setArticleSettingsTab] = useState('basic');
+    const [imageSettingsTab, setImageSettingsTab] = useState('basic');
+
     const mainContentRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
@@ -168,106 +178,163 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ apiKey, language, t
                     ))}
                 </div>
 
-                <SidebarCard title={t('newArticle')}>
-                    <input type="text" value={state.title} onChange={(e) => setState(p => ({...p, title: e.target.value}))} placeholder={t('articleTitlePlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"/>
-                    <div className="flex items-center gap-2">
-                        <input type="text" value={state.keywords} onChange={(e) => setState(p => ({...p, keywords: e.target.value}))} placeholder={t('keywordsPlaceholder')} className="flex-grow bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"/>
-                        <button onClick={handlers.handleGenerateKeywords} disabled={state.isGeneratingKeywords || !apiKey} className="flex-shrink-0 p-2.5 text-white rounded-lg shadow-md bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-zinc-700 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-500/50">
-                            {state.isGeneratingKeywords ? <SpinnerIcon className="animate-spin h-5 w-5" /> : <MagicSparklesIcon className="h-5 w-5" />}
-                        </button>
-                    </div>
-                    {renderSelect('language', t('selectLanguage'), state.articleLanguage, (e) => setState(p => ({...p, articleLanguage: e.target.value})), languageOptions)}
-                     <div>
-                        <label htmlFor="wordCount" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('wordCount')}</label>
-                        <input id="wordCount" type="number" value={state.wordCount} onChange={(e) => setState(p => ({...p, wordCount: e.target.value}))} placeholder={t('wordCount')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
-                    </div>
-                </SidebarCard>
-                
-                <SidebarCard>
-                     <button onClick={() => setState(p => ({...p, showAdvanced: !p.showAdvanced}))} className="w-full text-left font-semibold text-cyan-600 dark:text-cyan-400 text-sm">
-                        {t('advancedOptions')} {state.showAdvanced ? '(-)' : '(+)'}
-                    </button>
-                    <AnimatePresence>
-                    {state.showAdvanced && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-4">
-                             <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-200 dark:border-zinc-700">
-                                {renderSelect('tone', t('selectTone'), state.tone, (e) => setState(p => ({...p, tone: e.target.value})), toneOptions)}
-                                {renderSelect('contentType', t('selectContentType'), state.contentType, (e) => setState(p => ({...p, contentType: e.target.value})), contentTypeOptions)}
-                                {renderSelect('targetAudience', t('selectAudience'), state.targetAudience, (e) => setState(p => ({...p, targetAudience: e.target.value})), audienceOptions)}
-                                {renderSelect('writingStyle', t('selectWritingStyle'), state.writingStyle, (e) => setState(p => ({...p, writingStyle: e.target.value})), writingStyleOptions)}
-                                {renderSelect('numberOfSections', t('numberOfSections'), state.numberOfSections, (e) => setState(p => ({...p, numberOfSections: e.target.value})), [{ value: '3-5', label: t('sections3to5') }, { value: '5-7', label: t('sections5to7') }, { value: '7-9', label: t('sections7to9') },])}
-                                {renderSelect('introStyle', t('introStyle'), state.introductionStyle, (e) => setState(p => ({...p, introductionStyle: e.target.value})), [{ value: 'Engaging Hook', label: t('introStyleEngaging') }, { value: 'Direct Statement', label: t('introStyleDirect') }, { value: 'Question-based Hook', label: t('introStyleQuestion') },])}
-                                {renderSelect('conclusionStyle', t('conclusionStyle'), state.conclusionStyle, (e) => setState(p => ({...p, conclusionStyle: e.target.value})), [{ value: 'Concise Summary', label: t('conclusionStyleSummary') }, { value: 'Call to Action', label: t('conclusionStyleCta') }, { value: 'Thought-Provoking Question', label: t('conclusionStyleQuestion') },])}
-                                <div>
-                                    <label htmlFor="primaryFocus" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('primaryFocus')}</label>
-                                    <textarea
-                                        id="primaryFocus"
-                                        value={state.primaryFocus}
-                                        onChange={(e) => setState(p => ({ ...p, primaryFocus: e.target.value }))}
-                                        placeholder={t('primaryFocusPlaceholder')}
-                                        rows={3}
-                                        className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
-                                    />
-                                </div>
-                                <ToggleSwitch id="faq-toggle" label={t('includeFaq')} checked={state.includeFaq} onChange={(c) => setState(p => ({...p, includeFaq: c}))} />
-                                <ToggleSwitch id="table-toggle" label={t('includeTable')} checked={state.includeTable} onChange={(c) => setState(p => ({...p, includeTable: c}))} />
-                                <ToggleSwitch id="quote-toggle" label={t('includeQuote')} checked={state.includeQuote} onChange={(c) => setState(p => ({...p, includeQuote: c}))} />
-                            </div>
-                        </motion.div>
-                    )}
-                    </AnimatePresence>
-                    <ToggleSwitch id="google-search-toggle" label={t('useGoogleSearch')} checked={state.useGoogleSearch} onChange={(c) => setState(p => ({...p, useGoogleSearch: c}))} />
-                </SidebarCard>
-                
-                <SidebarCard title={t('imageSettings')}>
-                    {renderSelect('imageModel', t('imageModel'), state.imageModel, (e) => setState(p => ({...p, imageModel: e.target.value})), imageModelOptions)}
-                    {renderSelect('imageStyle', t('imageStyle'), state.imageStyle, (e) => setState(p => ({...p, imageStyle: e.target.value})), imageStyleOptions)}
-                    {renderSelect('aspectRatio', t('aspectRatio'), state.imageAspectRatio, (e) => setState(p => ({...p, imageAspectRatio: e.target.value})), imageAspectRatioOptions)}
-                    <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
-                         <AnimatePresence>
-                            {isImagenModel && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-5">
-                                    <ToggleSwitch id="title-in-image-toggle" label={t('includeTitleInImage')} checked={state.includeTitleInImage} onChange={(c) => setState(p => ({...p, includeTitleInImage: c}))} />
-                                    <div>
-                                        <label htmlFor="customImageText" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('customImageText')}</label>
-                                        <input id="customImageText" type="text" value={state.customImageText} onChange={(e) => setState(p => ({...p, customImageText: e.target.value}))} placeholder={t('customImageTextPlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
-                                    </div>
+                <div className="bg-white dark:bg-zinc-900/70 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <nav className="flex items-center gap-2 p-2 border-b border-slate-200 dark:border-zinc-800">
+                        <TabButton isActive={mainSettingsTab === 'article'} onClick={() => setMainSettingsTab('article')}>{t('articleDetails')}</TabButton>
+                        <TabButton isActive={mainSettingsTab === 'image'} onClick={() => setMainSettingsTab('image')}>{t('imageSettings')}</TabButton>
+                    </nav>
 
-                                    <AnimatePresence>
-                                        {(state.includeTitleInImage || state.customImageText.trim() !== '') && (
-                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                                {renderSelect('imageTextLanguage', t('imageTextLanguage'), state.imageTextLanguage, (e) => setState(p => ({...p, imageTextLanguage: e.target.value})), languageOptions)}
-                                            </motion.div>
-                                        )}
+                    <div className="p-6">
+                        <AnimatePresence mode="wait">
+                            {mainSettingsTab === 'article' && (
+                                <motion.div
+                                    key="article-settings"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                    className="space-y-5"
+                                >
+                                    <div className="flex items-center gap-2 p-1 bg-slate-200/60 dark:bg-zinc-800/60 rounded-lg">
+                                        <TabButton isActive={articleSettingsTab === 'basic'} onClick={() => setArticleSettingsTab('basic')}>{t('basic')}</TabButton>
+                                        <TabButton isActive={articleSettingsTab === 'advanced'} onClick={() => setArticleSettingsTab('advanced')}>{t('advanced')}</TabButton>
+                                    </div>
+                                     <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={articleSettingsTab}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-4 pt-2"
+                                        >
+                                            {articleSettingsTab === 'basic' ? (
+                                                <>
+                                                    <input type="text" value={state.title} onChange={(e) => setState(p => ({...p, title: e.target.value}))} placeholder={t('articleTitlePlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"/>
+                                                    <div className="flex items-center gap-2">
+                                                        <input type="text" value={state.keywords} onChange={(e) => setState(p => ({...p, keywords: e.target.value}))} placeholder={t('keywordsPlaceholder')} className="flex-grow bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"/>
+                                                        <button onClick={handlers.handleGenerateKeywords} disabled={state.isGeneratingKeywords || !apiKey} className="flex-shrink-0 p-2.5 text-white rounded-lg shadow-md bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-zinc-700 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+                                                            {state.isGeneratingKeywords ? <SpinnerIcon className="animate-spin h-5 w-5" /> : <MagicSparklesIcon className="h-5 w-5" />}
+                                                        </button>
+                                                    </div>
+                                                    {renderSelect('language', t('selectLanguage'), state.articleLanguage, (e) => setState(p => ({...p, articleLanguage: e.target.value})), languageOptions)}
+                                                    <div>
+                                                        <label htmlFor="wordCount" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('wordCount')}</label>
+                                                        <input id="wordCount" type="number" value={state.wordCount} onChange={(e) => setState(p => ({...p, wordCount: e.target.value}))} placeholder={t('wordCount')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
+                                                    </div>
+                                                     <ToggleSwitch id="google-search-toggle" label={t('useGoogleSearch')} checked={state.useGoogleSearch} onChange={(c) => setState(p => ({...p, useGoogleSearch: c}))} />
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {renderSelect('tone', t('selectTone'), state.tone, (e) => setState(p => ({...p, tone: e.target.value})), toneOptions)}
+                                                    {renderSelect('contentType', t('selectContentType'), state.contentType, (e) => setState(p => ({...p, contentType: e.target.value})), contentTypeOptions)}
+                                                    {renderSelect('targetAudience', t('selectAudience'), state.targetAudience, (e) => setState(p => ({...p, targetAudience: e.target.value})), audienceOptions)}
+                                                    {renderSelect('writingStyle', t('selectWritingStyle'), state.writingStyle, (e) => setState(p => ({...p, writingStyle: e.target.value})), writingStyleOptions)}
+                                                    {renderSelect('numberOfSections', t('numberOfSections'), state.numberOfSections, (e) => setState(p => ({...p, numberOfSections: e.target.value})), [{ value: '3-5', label: t('sections3to5') }, { value: '5-7', label: t('sections5to7') }, { value: '7-9', label: t('sections7to9') },])}
+                                                    {renderSelect('introStyle', t('introStyle'), state.introductionStyle, (e) => setState(p => ({...p, introductionStyle: e.target.value})), [{ value: 'Engaging Hook', label: t('introStyleEngaging') }, { value: 'Direct Statement', label: t('introStyleDirect') }, { value: 'Question-based Hook', label: t('introStyleQuestion') },])}
+                                                    {renderSelect('conclusionStyle', t('conclusionStyle'), state.conclusionStyle, (e) => setState(p => ({...p, conclusionStyle: e.target.value})), [{ value: 'Concise Summary', label: t('conclusionStyleSummary') }, { value: 'Call to Action', label: t('conclusionStyleCta') }, { value: 'Thought-Provoking Question', label: t('conclusionStyleQuestion') },])}
+                                                    <div>
+                                                        <label htmlFor="primaryFocus" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('primaryFocus')}</label>
+                                                        <textarea
+                                                            id="primaryFocus"
+                                                            value={state.primaryFocus}
+                                                            onChange={(e) => setState(p => ({ ...p, primaryFocus: e.target.value }))}
+                                                            placeholder={t('primaryFocusPlaceholder')}
+                                                            rows={3}
+                                                            className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                                                        />
+                                                    </div>
+                                                    <ToggleSwitch id="faq-toggle" label={t('includeFaq')} checked={state.includeFaq} onChange={(c) => setState(p => ({...p, includeFaq: c}))} />
+                                                    <ToggleSwitch id="table-toggle" label={t('includeTable')} checked={state.includeTable} onChange={(c) => setState(p => ({...p, includeTable: c}))} />
+                                                    <ToggleSwitch id="quote-toggle" label={t('includeQuote')} checked={state.includeQuote} onChange={(c) => setState(p => ({...p, includeQuote: c}))} />
+                                                </>
+                                            )}
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
+                            
+                            {mainSettingsTab === 'image' && (
+                                <motion.div
+                                    key="image-settings"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                    className="space-y-5"
+                                >
+                                    <div className="flex items-center gap-2 p-1 bg-slate-200/60 dark:bg-zinc-800/60 rounded-lg">
+                                        <TabButton isActive={imageSettingsTab === 'basic'} onClick={() => setImageSettingsTab('basic')}>{t('basic')}</TabButton>
+                                        <TabButton isActive={imageSettingsTab === 'advanced'} onClick={() => setImageSettingsTab('advanced')}>{t('advanced')}</TabButton>
+                                    </div>
+                                     <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={imageSettingsTab}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-4 pt-2"
+                                        >
+                                            {imageSettingsTab === 'basic' ? (
+                                                <>
+                                                    {renderSelect('imageModel', t('imageModel'), state.imageModel, (e) => setState(p => ({...p, imageModel: e.target.value})), imageModelOptions)}
+                                                    {renderSelect('imageStyle', t('imageStyle'), state.imageStyle, (e) => setState(p => ({...p, imageStyle: e.target.value})), imageStyleOptions)}
+                                                    {renderSelect('aspectRatio', t('aspectRatio'), state.imageAspectRatio, (e) => setState(p => ({...p, imageAspectRatio: e.target.value})), imageAspectRatioOptions)}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <AnimatePresence>
+                                                        {isImagenModel && (
+                                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-5">
+                                                                <ToggleSwitch id="title-in-image-toggle" label={t('includeTitleInImage')} checked={state.includeTitleInImage} onChange={(c) => setState(p => ({...p, includeTitleInImage: c}))} />
+                                                                <div>
+                                                                    <label htmlFor="customImageText" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">{t('customImageText')}</label>
+                                                                    <input id="customImageText" type="text" value={state.customImageText} onChange={(e) => setState(p => ({...p, customImageText: e.target.value}))} placeholder={t('customImageTextPlaceholder')} className="w-full bg-slate-100/50 dark:bg-zinc-800/60 border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm py-2.5 px-4 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition" />
+                                                                </div>
+
+                                                                <AnimatePresence>
+                                                                    {(state.includeTitleInImage || state.customImageText.trim() !== '') && (
+                                                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                                                            {renderSelect('imageTextLanguage', t('imageTextLanguage'), state.imageTextLanguage, (e) => setState(p => ({...p, imageTextLanguage: e.target.value})), languageOptions)}
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                    <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
+                                                        <ToggleSwitch id="embed-logo-toggle" label={t('embedLogo')} checked={state.embedLogo} onChange={(c) => setState(p => ({...p, embedLogo: c}))} />
+                                                        <AnimatePresence>
+                                                            {state.embedLogo && (
+                                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-4">
+                                                                    <div className="space-y-2">
+                                                                        <input type="file" accept="image/png, image/jpeg" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" />
+                                                                        <button onClick={() => fileInputRef.current?.click()} className="w-full text-sm font-semibold bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 py-2 px-4 rounded-lg transition-colors">{t('uploadLogo')}</button>
+                                                                        <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">{t('logoUploadInstructions')}</p>
+                                                                    </div>
+                                                                    {state.logoImage && (
+                                                                        <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-zinc-800/60 rounded-lg">
+                                                                            <img src={state.logoImage} alt="Logo Preview" className="h-12 w-12 object-contain rounded-md bg-white dark:bg-zinc-700 p-1" />
+                                                                            <div className="flex-grow">
+                                                                                {renderSelect('logoPlacement', t('logoPlacement'), state.logoPlacement, (e) => setState(p => ({...p, logoPlacement: e.target.value})), logoPlacementOptions)}
+                                                                            </div>
+                                                                            <button onClick={() => setState(p => ({...p, logoImage: null}))} className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold">{t('removeLogo')}</button>
+                                                                        </div>
+                                                                    )}
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </motion.div>
                                     </AnimatePresence>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                    <div className="pt-5 border-t border-slate-200 dark:border-zinc-700/60 space-y-5">
-                        <ToggleSwitch id="embed-logo-toggle" label={t('embedLogo')} checked={state.embedLogo} onChange={(c) => setState(p => ({...p, embedLogo: c}))} />
-                         <AnimatePresence>
-                            {state.embedLogo && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-4">
-                                    <div className="space-y-2">
-                                        <input type="file" accept="image/png, image/jpeg" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" />
-                                        <button onClick={() => fileInputRef.current?.click()} className="w-full text-sm font-semibold bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 py-2 px-4 rounded-lg transition-colors">{t('uploadLogo')}</button>
-                                        <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">{t('logoUploadInstructions')}</p>
-                                    </div>
-                                    {state.logoImage && (
-                                        <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-zinc-800/60 rounded-lg">
-                                            <img src={state.logoImage} alt="Logo Preview" className="h-12 w-12 object-contain rounded-md bg-white dark:bg-zinc-700 p-1" />
-                                            <div className="flex-grow">
-                                                {renderSelect('logoPlacement', t('logoPlacement'), state.logoPlacement, (e) => setState(p => ({...p, logoPlacement: e.target.value})), logoPlacementOptions)}
-                                            </div>
-                                            <button onClick={() => setState(p => ({...p, logoImage: null}))} className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold">{t('removeLogo')}</button>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </SidebarCard>
+                </div>
 
                 <button onClick={handlers.handleGenerateOutline} disabled={state.isGeneratingOutline || state.isGeneratingArticle || !apiKey} className="w-full flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold text-white rounded-lg shadow-md bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-zinc-700 transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/50">
                     {state.isGeneratingOutline ? <><SpinnerIcon className="animate-spin h-5 w-5" /><span>{t('generatingOutline')}</span></> : <><ListBulletIcon className="h-5 w-5" /><span>{t('generateOutline')}</span></>}
