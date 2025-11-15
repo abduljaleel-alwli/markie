@@ -149,6 +149,7 @@ export const locales = {
     articleDetails: 'Article Details',
     basic: 'Basic',
     advanced: 'Advanced',
+    markdownSyntaxGuide: 'Markdown Syntax Guide',
   },
   ar: {
     appTitle: 'ماركي',
@@ -299,5 +300,6 @@ export const locales = {
     articleDetails: 'تفاصيل المقال',
     basic: 'أساسي',
     advanced: 'متقدم',
+    markdownSyntaxGuide: 'دليل صيغة ماركداون',
   },
 };

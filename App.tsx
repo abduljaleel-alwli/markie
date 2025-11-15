@@ -1,5 +1,8 @@
+
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+// FIX: Import `Transition` type from framer-motion to resolve type error.
+import { motion, AnimatePresence, Variants, Transition } from 'framer-motion';
 import { INITIAL_MARKDOWN, INITIAL_METADATA } from './constants';
 import { 
     generateSeoMetadata, 
@@ -23,6 +26,8 @@ import { useToast } from './hooks/useToast';
 import { remark } from 'remark';
 import html from 'remark-html';
 import remarkGfm from 'remark-gfm';
+
+const ARTICLE_GENERATOR_STORAGE_KEY = 'article-generator-settings';
 
 const initialArticleGeneratorState: ArticleGeneratorState = {
     currentStep: 1,
@@ -71,7 +76,8 @@ const pageVariants: Variants = {
     exit: { opacity: 0, y: -15 },
 };
 
-const pageTransition = { duration: 0.25, ease: 'easeInOut' };
+// FIX: Explicitly type `pageTransition` with the imported `Transition` type to fix type error.
+const pageTransition: Transition = { duration: 0.25, ease: 'easeInOut' };
 
 // Moved outside the component to prevent re-creation on every render
 interface NavButtonProps {
@@ -104,7 +110,37 @@ function App() {
     const [metadata, setMetadata] = useState<Metadata>(INITIAL_METADATA);
 
     // Article Generator State
-    const [generatorState, setGeneratorState] = useState<ArticleGeneratorState>(initialArticleGeneratorState);
+    const [generatorState, setGeneratorState] = useState<ArticleGeneratorState>(() => {
+        try {
+            const savedSettings = localStorage.getItem(ARTICLE_GENERATOR_STORAGE_KEY);
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings);
+                // Merge saved settings with defaults, then reset transient properties
+                return {
+                    ...initialArticleGeneratorState,
+                    ...parsedSettings,
+                    // Reset transient state to avoid issues on page load
+                    title: '', // Do not persist title
+                    keywords: '', // Do not persist keywords
+                    currentStep: 1,
+                    highestStep: 1,
+                    activeResultTab: null,
+                    isGeneratingKeywords: false,
+                    isGeneratingArticle: false,
+                    generatedArticle: '',
+                    sources: [],
+                    generatedImage: null,
+                    imageHistory: [],
+                    isGeneratingImage: false,
+                    outline: null,
+                    isGeneratingOutline: false,
+                };
+            }
+        } catch (error) {
+            console.error("Failed to load or parse article generator settings from localStorage", error);
+        }
+        return initialArticleGeneratorState;
+    });
     
     // Global State
     const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini-api-key'));
@@ -153,6 +189,34 @@ function App() {
         localStorage.setItem('language', language);
         setMetadata(prev => ({ ...prev, lang: language }));
     }, [language]);
+
+    // Persist generator settings to localStorage
+    useEffect(() => {
+        try {
+            const {
+                // Exclude title and keywords from saving
+                articleLanguage, tone, contentType,
+                targetAudience, writingStyle, wordCount, numberOfSections,
+                introductionStyle, conclusionStyle, includeFaq, includeTable,
+                includeQuote, useGoogleSearch, imageModel, imageStyle,
+                imageAspectRatio, includeTitleInImage, imageTextLanguage,
+                customImageText, embedLogo, logoImage, logoPlacement, primaryFocus, // Include logoImage
+            } = generatorState;
+
+            const settingsToSave = {
+                articleLanguage, tone, contentType,
+                targetAudience, writingStyle, wordCount, numberOfSections,
+                introductionStyle, conclusionStyle, includeFaq, includeTable,
+                includeQuote, useGoogleSearch, imageModel, imageStyle,
+                imageAspectRatio, includeTitleInImage, imageTextLanguage,
+                customImageText, embedLogo, logoImage, logoPlacement, primaryFocus,
+            };
+
+            localStorage.setItem(ARTICLE_GENERATOR_STORAGE_KEY, JSON.stringify(settingsToSave));
+        } catch (error) {
+            console.error("Failed to save article generator settings to localStorage", error);
+        }
+    }, [generatorState]);
     
     // API Key Handlers
     const handleSaveApiKey = (key: string) => {
