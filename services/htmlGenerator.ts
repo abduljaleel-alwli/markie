@@ -34,23 +34,9 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         h1, h2, h3 { line-height: 1.3; font-weight: 700; }
         h1 { font-size: 2.25em; }
         h2 { font-size: 1.75em; margin-top: 2em; border-bottom: 1px solid; padding-bottom: 0.3em; }
-        
-        /* General code styling for PrismJS compatibility */
-        :not(pre) > code { 
-            padding: 0.2em 0.4em; 
-            margin: 0; 
-            font-size: 85%; 
-            border-radius: 6px; 
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-        }
-        pre[class*="language-"] { 
-            padding: 1rem !important; 
-            margin: 1.5em 0; 
-            border-radius: 8px; 
-            overflow-x: auto; 
-            border: 1px solid transparent; /* Border for themes that don't have one */
-        }
-        
+        code { padding: 0.2em 0.4em; margin: 0; font-size: 85%; border-radius: 6px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace; }
+        pre { padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        pre code { padding: 0; background: none; }
         blockquote { padding-left: 1em; }
         img { max-width: 100%; height: auto; border-radius: 8px; }
         .table-blog { border-collapse: separate; border-spacing: 0; width: 100%; margin: 1.5em 0; overflow: hidden; border-radius: 8px; }
@@ -66,8 +52,8 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
     const lightThemeCss = `
         body { color: #1e293b; background-color: #f8fafc; }
         h2 { border-color: #e2e8f0; }
-        :not(pre) > code { background-color: #e2e8f0; color: #1e293b; }
-        pre[class*="language-"] { border-color: #e2e8f0; }
+        code { background-color: #e2e8f0; }
+        pre { background-color: #e2e8f0; color: #1e293b; }
         blockquote { border-left: 4px solid #cbd5e1; color: #475569; }
         .table-blog { box-shadow: 0 0 0 1px #e2e8f0; }
         .table-blog th { background-color: #f8fafc; color: #475569; }
@@ -80,8 +66,8 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
     const darkThemeCss = `
         body { color: #d4d4d8; background-color: #09090b; }
         h2 { border-color: #3f3f46; }
-        :not(pre) > code { background-color: #3f3f46; color: #e4e4e7; }
-        pre[class*="language-"] { border-color: #3f3f46; }
+        code { background-color: #3f3f46; }
+        pre { background-color: #18181b; color: #e4e4e7; }
         blockquote { border-left: 4px solid #52525b; color: #a1a1aa; }
         .table-blog { box-shadow: 0 0 0 1px #3f3f46; }
         .table-blog th { background-color: #27272a; color: #a1a1aa; }
@@ -91,10 +77,6 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         a { color: #67e8f9; }
     `;
     
-    const prismThemeHref = theme === 'dark' 
-        ? 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css' 
-        : 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';
-
     return `<!DOCTYPE html>
 <html lang="${lang}" dir="${dir}" class="${theme}">
 <head>
@@ -129,9 +111,6 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
     ${JSON.stringify(jsonLd, null, 4)}
     </script>
     
-    <!-- PrismJS Theme -->
-    <link href="${prismThemeHref}" rel="stylesheet" />
-
     <!-- Styling for Preview -->
     <style>
         ${baseCss}
@@ -147,10 +126,6 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
     <article>
         ${htmlBody}
     </article>
-
-    <!-- PrismJS Scripts (Core + Autoloader for language detection) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>
 </html>`;
 };
