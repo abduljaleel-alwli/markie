@@ -34,6 +34,7 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         h1, h2, h3 { line-height: 1.3; font-weight: 700; }
         h1 { font-size: 2.25em; }
         h2 { font-size: 1.75em; margin-top: 2em; border-bottom: 1px solid; padding-bottom: 0.3em; }
+        p + p { margin-top: 25px; }
         code { padding: 0.2em 0.4em; margin: 0; font-size: 85%; border-radius: 6px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace; }
         pre { padding: 1rem; border-radius: 8px; overflow-x: auto; }
         pre code { padding: 0; background: none; }
@@ -67,7 +68,7 @@ export const generateFullHtml = (metadata: Metadata, htmlBody: string, theme: 'l
         body { color: #d4d4d8; background-color: #09090b; }
         h2 { border-color: #3f3f46; }
         code { background-color: #3f3f46; }
-        pre { background-color: #18181b; color: #e4e4e7; }
+        pre { background-color: #18181b; color: #e4e47; }
         blockquote { border-left: 4px solid #52525b; color: #a1a1aa; }
         .table-blog { box-shadow: 0 0 0 1px #3f3f46; }
         .table-blog th { background-color: #27272a; color: #a1a1aa; }
