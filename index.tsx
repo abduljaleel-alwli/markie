@@ -15,4 +15,4 @@ root.render(
       <App />
     </ToastProvider>
   </React.StrictMode>
-);
+); 
